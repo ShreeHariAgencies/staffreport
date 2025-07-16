@@ -339,194 +339,6 @@
             margin-top: 5px;
         }
         
-        .view-toggle {
-            display: flex;
-            background: #f8f9fa;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        
-        .view-toggle button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            background: #f8f9fa;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .view-toggle button.active {
-            background: #1a2a6c;
-            color: white;
-        }
-        
-        .summary-card {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-left: 4px solid #1a2a6c;
-        }
-        
-        .summary-employee {
-            font-weight: bold;
-            color: #1a2a6c;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-        }
-        
-        .summary-date {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        
-        .summary-content {
-            color: #333;
-        }
-        
-        .summary-section {
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px dashed #ddd;
-        }
-        
-        .summary-section-title {
-            font-weight: bold;
-            color: #1a2a6c;
-            margin-bottom: 5px;
-        }
-        
-        .ai-badge {
-            display: inline-block;
-            background: #e6f7ff;
-            color: #0066cc;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            margin-left: 8px;
-        }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top-color: #1a2a6c;
-            animation: spin 1s ease-in-out infinite;
-            margin-left: 10px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .staff-card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        
-        .staff-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .staff-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-right: 20px;
-        }
-        
-        .staff-info {
-            flex: 1;
-        }
-        
-        .staff-name {
-            font-weight: bold;
-            color: #1a2a6c;
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-        
-        .staff-email {
-            color: #666;
-            font-size: 0.9rem;
-        }
-        
-        .staff-registration-date {
-            color: #666;
-            font-size: 0.8rem;
-            margin-top: 5px;
-        }
-        
-        .staff-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 0.8rem;
-        }
-        
-        .search-box {
-            display: flex;
-            margin-bottom: 20px;
-        }
-        
-        .search-box input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px 0 0 8px;
-            font-size: 1rem;
-        }
-        
-        .search-box button {
-            padding: 12px 20px;
-            background: #1a2a6c;
-            color: white;
-            border: none;
-            border-radius: 0 8px 8px 0;
-            cursor: pointer;
-        }
-        
-        .pagination {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-            gap: 5px;
-        }
-        
-        .pagination button {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            background: white;
-            cursor: pointer;
-        }
-        
-        .pagination button.active {
-            background: #1a2a6c;
-            color: white;
-        }
-        
         @media (max-width: 768px) {
             .options {
                 flex-direction: column;
@@ -536,20 +348,6 @@
             .option-card {
                 width: 100%;
                 max-width: 400px;
-            }
-            
-            .staff-card {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .staff-avatar {
-                margin-right: 0;
-                margin-bottom: 10px;
-            }
-            
-            .staff-actions {
-                margin-top: 10px;
             }
         }
     </style>
@@ -694,4 +492,534 @@
                 <div id="edit-report-container" class="hidden">
                     <div class="form-group">
                         <div class="section-title">1. Marketing</div>
-                        <textarea id="edit-marketing-content
+                        <textarea id="edit-marketing-content" placeholder="Enter your marketing activities..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="section-title">2. Collection</div>
+                        <textarea id="edit-collection-content" placeholder="Enter your collection activities..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="section-title">3. Commission Received</div>
+                        <textarea id="edit-commission-content" placeholder="Enter your commission details..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="section-title">4. Accounts</div>
+                        <textarea id="edit-accounts-content" placeholder="Enter your accounts activities..."></textarea>
+                    </div>
+                    
+                    <button class="btn" onclick="updateReport()">Update Report</button>
+                    <button class="btn back-btn" onclick="cancelEdit()">Cancel</button>
+                </div>
+            </div>
+            
+            <div id="report-message" class="status-message hidden"></div>
+        </div>
+        
+        <!-- Owner Dashboard -->
+        <div id="owner-dashboard" class="dashboard hidden">
+            <div class="dashboard-header">
+                <h2>Owner Dashboard</h2>
+                <button class="btn back-btn" onclick="showLoginScreen()">Logout</button>
+            </div>
+            
+            <div class="report-section">
+                <h3>All Staff Reports (Last 40 Days)</h3>
+                <div id="reports-container" class="report-list">
+                    <!-- Reports will be loaded here -->
+                </div>
+                
+                <div class="delete-older-reports" id="delete-notice">
+                    Reports older than 40 days will be automatically deleted.
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>&copy; 2023 Shree Hari Agencies. All rights reserved.</p>
+        </footer>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Confirm Report Submission</h3>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Please confirm your report submission:</p>
+                <div class="date-display" id="modal-date"></div>
+                
+                <div class="section-title">Marketing</div>
+                <div id="preview-marketing" style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; white-space: pre-line;"></div>
+                
+                <div class="section-title">Collection</div>
+                <div id="preview-collection" style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; white-space: pre-line;"></div>
+                
+                <div class="section-title">Commission Received</div>
+                <div id="preview-commission" style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; white-space: pre-line;"></div>
+                
+                <div class="section-title">Accounts</div>
+                <div id="preview-accounts" style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; white-space: pre-line;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn" onclick="confirmSubmitReport()">Confirm Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let staffAccounts = JSON.parse(localStorage.getItem('staffAccounts')) || {};
+        let reports = JSON.parse(localStorage.getItem('reports')) || [];
+        let currentUser = null;
+        
+        // Owner credentials
+        const OWNER_EMAIL = "shreehariagencies12@gmail.com";
+        const OWNER_PASSWORD = "Pratik@3";
+        
+        // Navigation functions
+        function showLoginScreen() {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('create-account').classList.add('hidden');
+            document.getElementById('staff-login').classList.add('hidden');
+            document.getElementById('owner-login').classList.add('hidden');
+            document.getElementById('staff-dashboard').classList.add('hidden');
+            document.getElementById('owner-dashboard').classList.add('hidden');
+            currentUser = null;
+        }
+        
+        function showForm(formId) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('create-account').classList.add('hidden');
+            document.getElementById('staff-login').classList.add('hidden');
+            document.getElementById('owner-login').classList.add('hidden');
+            document.getElementById(formId).classList.remove('hidden');
+        }
+        
+        // Account creation
+        function createAccount() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('account-message');
+            
+            if (!email || !password) {
+                showMessage(messageDiv, "Please fill in all fields", "error");
+                return;
+            }
+            
+            if (!isValidEmail(email)) {
+                showMessage(messageDiv, "Please enter a valid email address", "error");
+                return;
+            }
+            
+            if (!isPasswordValid(password)) {
+                showMessage(messageDiv, "Password must be at least 6 characters and contain a digit and special character", "error");
+                return;
+            }
+            
+            if (staffAccounts[email]) {
+                showMessage(messageDiv, "This email is already registered", "error");
+                return;
+            }
+            
+            staffAccounts[email] = password;
+            localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
+            
+            showMessage(messageDiv, "Account created successfully! You can now log in.", "success");
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        }
+        
+        // Login functions
+        function staffLogin() {
+            const email = document.getElementById('staff-email').value.trim();
+            const password = document.getElementById('staff-password').value;
+            const messageDiv = document.getElementById('staff-login-message');
+            
+            if (!email || !password) {
+                showMessage(messageDiv, "Please enter both email and password", "error");
+                return;
+            }
+            
+            if (!staffAccounts[email] || staffAccounts[email] !== password) {
+                showMessage(messageDiv, "Invalid email or password", "error");
+                return;
+            }
+            
+            currentUser = { email, type: 'staff' };
+            showStaffDashboard();
+        }
+        
+        function ownerLogin() {
+            const email = document.getElementById('owner-email').value.trim();
+            const password = document.getElementById('owner-password').value;
+            const messageDiv = document.getElementById('owner-login-message');
+            
+            if (!email || !password) {
+                showMessage(messageDiv, "Please enter both email and password", "error");
+                return;
+            }
+            
+            if (email !== OWNER_EMAIL || password !== OWNER_PASSWORD) {
+                showMessage(messageDiv, "Invalid email or password", "error");
+                return;
+            }
+            
+            currentUser = { email, type: 'owner' };
+            showOwnerDashboard();
+        }
+        
+        // Dashboard functions
+        function showStaffDashboard() {
+            document.getElementById('staff-login').classList.add('hidden');
+            document.getElementById('staff-dashboard').classList.remove('hidden');
+            
+            // Display current date
+            const currentDate = getCurrentIndiaTime().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('current-date').textContent = `Today: ${currentDate}`;
+            
+            // Check if after 6 PM India time
+            const now = getIndiaTime();
+            const hours = now.getHours();
+            
+            if (hours < 18) {
+                document.getElementById('time-notice').style.display = 'block';
+            } else {
+                document.getElementById('time-notice').style.display = 'none';
+            }
+            
+            // Check if already submitted report today
+            const today = now.toISOString().split('T')[0];
+            const hasReportToday = reports.some(r => r.email === currentUser.email && r.date === today);
+            
+            if (hasReportToday) {
+                document.getElementById('report-message').innerHTML = "You have already submitted a report today. You can edit it below.";
+                document.getElementById('report-message').className = "status-message warning";
+                document.getElementById('report-message').classList.remove('hidden');
+            } else {
+                document.getElementById('report-message').classList.add('hidden');
+            }
+        }
+        
+        function showOwnerDashboard() {
+            document.getElementById('owner-login').classList.add('hidden');
+            document.getElementById('owner-dashboard').classList.remove('hidden');
+            loadAllReports();
+        }
+        
+        // Report functions
+        function showConfirmModal() {
+            // Validate that at least one section is filled
+            const marketing = document.getElementById('marketing-content').value.trim();
+            const collection = document.getElementById('collection-content').value.trim();
+            const commission = document.getElementById('commission-content').value.trim();
+            const accounts = document.getElementById('accounts-content').value.trim();
+            
+            if (!marketing && !collection && !commission && !accounts) {
+                showMessage(document.getElementById('report-message'), "At least one section must be filled", "error");
+                return;
+            }
+            
+            // Check if after 6 PM India time
+            if (!isAfter6PM()) {
+                showMessage(document.getElementById('report-message'), "Reports can only be submitted after 6:00 PM India time", "error");
+                return;
+            }
+            
+            // Check if already submitted report today
+            const today = getCurrentIndiaTime().toISOString().split('T')[0];
+            const existingReportIndex = reports.findIndex(r => r.email === currentUser.email && r.date === today);
+            
+            if (existingReportIndex !== -1) {
+                showMessage(document.getElementById('report-message'), "You have already submitted a report today. Use the edit option below.", "warning");
+                return;
+            }
+            
+            // Show modal with confirmation
+            const currentDate = getCurrentIndiaTime().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('modal-date').textContent = `Submission Date: ${currentDate}`;
+            
+            // Preview each section
+            document.getElementById('preview-marketing').textContent = marketing || "No marketing activities reported";
+            document.getElementById('preview-collection').textContent = collection || "No collection activities reported";
+            document.getElementById('preview-commission').textContent = commission || "No commission details reported";
+            document.getElementById('preview-accounts').textContent = accounts || "No accounts activities reported";
+            
+            document.getElementById('confirm-modal').style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('confirm-modal').style.display = 'none';
+        }
+        
+        function confirmSubmitReport() {
+            const marketing = document.getElementById('marketing-content').value.trim();
+            const collection = document.getElementById('collection-content').value.trim();
+            const commission = document.getElementById('commission-content').value.trim();
+            const accounts = document.getElementById('accounts-content').value.trim();
+            
+            const today = getCurrentIndiaTime().toISOString().split('T')[0];
+            
+            reports.push({
+                email: currentUser.email,
+                date: today,
+                marketing: marketing,
+                collection: collection,
+                commission: commission,
+                accounts: accounts
+            });
+            
+            // Save data and clean up old reports
+            saveData();
+            cleanOldReports();
+            
+            closeModal();
+            showMessage(document.getElementById('report-message'), "Report submitted successfully!", "success");
+            
+            // Clear all textareas
+            document.getElementById('marketing-content').value = '';
+            document.getElementById('collection-content').value = '';
+            document.getElementById('commission-content').value = '';
+            document.getElementById('accounts-content').value = '';
+        }
+        
+        function editReport() {
+            const today = getCurrentIndiaTime().toISOString().split('T')[0];
+            const todayReport = reports.find(r => r.email === currentUser.email && r.date === today);
+            
+            if (!todayReport) {
+                showMessage(document.getElementById('report-message'), "You haven't submitted a report today yet", "error");
+                return;
+            }
+            
+            // Fill in the edit form with existing data
+            document.getElementById('edit-marketing-content').value = todayReport.marketing || '';
+            document.getElementById('edit-collection-content').value = todayReport.collection || '';
+            document.getElementById('edit-commission-content').value = todayReport.commission || '';
+            document.getElementById('edit-accounts-content').value = todayReport.accounts || '';
+            
+            document.getElementById('edit-report-container').classList.remove('hidden');
+        }
+        
+        function updateReport() {
+            const today = getCurrentIndiaTime().toISOString().split('T')[0];
+            const todayReportIndex = reports.findIndex(r => r.email === currentUser.email && r.date === today);
+            
+            if (todayReportIndex === -1) {
+                showMessage(document.getElementById('report-message'), "Report not found", "error");
+                return;
+            }
+            
+            const marketing = document.getElementById('edit-marketing-content').value.trim();
+            const collection = document.getElementById('edit-collection-content').value.trim();
+            const commission = document.getElementById('edit-commission-content').value.trim();
+            const accounts = document.getElementById('edit-accounts-content').value.trim();
+            
+            // Validate that at least one section is filled
+            if (!marketing && !collection && !commission && !accounts) {
+                showMessage(document.getElementById('report-message'), "At least one section must be filled", "error");
+                return;
+            }
+            
+            reports[todayReportIndex] = {
+                email: currentUser.email,
+                date: today,
+                marketing: marketing,
+                collection: collection,
+                commission: commission,
+                accounts: accounts
+            };
+            
+            saveData();
+            
+            document.getElementById('edit-report-container').classList.add('hidden');
+            showMessage(document.getElementById('report-message'), "Report updated successfully!", "success");
+        }
+        
+        function cancelEdit() {
+            document.getElementById('edit-report-container').classList.add('hidden');
+        }
+        
+        function loadAllReports() {
+            const container = document.getElementById('reports-container');
+            container.innerHTML = '';
+            
+            // Clean up old reports first
+            cleanOldReports();
+            
+            if (reports.length === 0) {
+                container.innerHTML = '<p>No reports found</p>';
+                return;
+            }
+            
+            // Filter reports from the last 40 days
+            const fortyDaysAgo = new Date(getCurrentIndiaTime());
+            fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
+            
+            const recentReports = reports.filter(report => {
+                const reportDate = new Date(report.date);
+                return reportDate >= fortyDaysAgo;
+            });
+            
+            if (recentReports.length === 0) {
+                container.innerHTML = '<p>No reports from the last 40 days</p>';
+                return;
+            }
+            
+            // Group reports by date
+            const reportsByDate = {};
+            recentReports.forEach(report => {
+                if (!reportsByDate[report.date]) {
+                    reportsByDate[report.date] = [];
+                }
+                reportsByDate[report.date].push(report);
+            });
+            
+            // Sort dates in descending order
+            const sortedDates = Object.keys(reportsByDate).sort().reverse();
+            
+            sortedDates.forEach(date => {
+                const dateHeader = document.createElement('h4');
+                dateHeader.textContent = formatDate(date);
+                container.appendChild(dateHeader);
+                
+                reportsByDate[date].forEach(report => {
+                    const reportDiv = document.createElement('div');
+                    reportDiv.className = 'report-item';
+                    
+                    const emailDiv = document.createElement('div');
+                    emailDiv.className = 'report-email';
+                    emailDiv.textContent = `Staff: ${report.email}`;
+                    
+                    // Create sections for each part of the report
+                    const sections = [
+                        { title: 'Marketing', content: report.marketing },
+                        { title: 'Collection', content: report.collection },
+                        { title: 'Commission Received', content: report.commission },
+                        { title: 'Accounts', content: report.accounts }
+                    ];
+                    
+                    sections.forEach(section => {
+                        if (section.content) {
+                            const sectionDiv = document.createElement('div');
+                            sectionDiv.className = 'report-section';
+                            
+                            const sectionTitle = document.createElement('div');
+                            sectionTitle.className = 'section-title';
+                            sectionTitle.textContent = section.title;
+                            
+                            const sectionContent = document.createElement('div');
+                            sectionContent.className = 'report-content';
+                            sectionContent.textContent = section.content;
+                            
+                            sectionDiv.appendChild(sectionTitle);
+                            sectionDiv.appendChild(sectionContent);
+                            reportDiv.appendChild(sectionDiv);
+                        }
+                    });
+                    
+                    container.appendChild(reportDiv);
+                });
+            });
+            
+            // Show notice about deleted reports
+            const deletedCount = reports.length - recentReports.length;
+            if (deletedCount > 0) {
+                document.getElementById('delete-notice').textContent = 
+                    `${deletedCount} reports older than 40 days were automatically deleted.`;
+            }
+        }
+        
+        // Utility functions
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        function isPasswordValid(password) {
+            return password.length >= 6 && 
+                   /\d/.test(password) && 
+                   /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        }
+        
+        function getCurrentIndiaTime() {
+            return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+        }
+        
+        function getIndiaTime() {
+            return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+        }
+        
+        function isAfter6PM() {
+            const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+            return now.getHours() >= 18;
+        }
+        
+        function hasReportToday(email) {
+            const today = getCurrentIndiaTime().toISOString().split('T')[0];
+            return reports.some(r => r.email === email && r.date === today);
+        }
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+        
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `status-message ${type}`;
+            element.classList.remove('hidden');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                element.classList.add('hidden');
+            }, 5000);
+        }
+        
+        function cleanOldReports() {
+            const fortyDaysAgo = new Date(getCurrentIndiaTime());
+            fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
+            
+            const initialCount = reports.length;
+            reports = reports.filter(report => {
+                const reportDate = new Date(report.date);
+                return reportDate >= fortyDaysAgo;
+            });
+            
+            if (initialCount !== reports.length) {
+                localStorage.setItem('reports', JSON.stringify(reports));
+            }
+        }
+        
+        function saveData() {
+            localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
+            localStorage.setItem('reports', JSON.stringify(reports));
+        }
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            showLoginScreen();
+        });
+    </script>
+</body>
+</html>
