@@ -339,6 +339,194 @@
             margin-top: 5px;
         }
         
+        .view-toggle {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .view-toggle button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .view-toggle button.active {
+            background: #1a2a6c;
+            color: white;
+        }
+        
+        .summary-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #1a2a6c;
+        }
+        
+        .summary-employee {
+            font-weight: bold;
+            color: #1a2a6c;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .summary-date {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .summary-content {
+            color: #333;
+        }
+        
+        .summary-section {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+        }
+        
+        .summary-section-title {
+            font-weight: bold;
+            color: #1a2a6c;
+            margin-bottom: 5px;
+        }
+        
+        .ai-badge {
+            display: inline-block;
+            background: #e6f7ff;
+            color: #0066cc;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #1a2a6c;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .staff-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .staff-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .staff-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-right: 20px;
+        }
+        
+        .staff-info {
+            flex: 1;
+        }
+        
+        .staff-name {
+            font-weight: bold;
+            color: #1a2a6c;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .staff-email {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .staff-registration-date {
+            color: #666;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .staff-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        
+        .search-box {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px 0 0 8px;
+            font-size: 1rem;
+        }
+        
+        .search-box button {
+            padding: 12px 20px;
+            background: #1a2a6c;
+            color: white;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+        
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .pagination button.active {
+            background: #1a2a6c;
+            color: white;
+        }
+        
         @media (max-width: 768px) {
             .options {
                 flex-direction: column;
@@ -348,6 +536,20 @@
             .option-card {
                 width: 100%;
                 max-width: 400px;
+            }
+            
+            .staff-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .staff-avatar {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .staff-actions {
+                margin-top: 10px;
             }
         }
     </style>
@@ -525,14 +727,63 @@
                 <button class="btn back-btn" onclick="showLoginScreen()">Logout</button>
             </div>
             
-            <div class="report-section">
-                <h3>All Staff Reports (Last 40 Days)</h3>
-                <div id="reports-container" class="report-list">
-                    <!-- Reports will be loaded here -->
+            <div class="view-toggle">
+                <button id="daily-reports-btn" class="active" onclick="switchView('daily')">Daily Reports</button>
+                <button id="summary-reports-btn" onclick="switchView('summary')">AI Summarized Reports</button>
+                <button id="staff-list-btn" onclick="switchView('staff')">Staff Registration List</button>
+            </div>
+            
+            <!-- Daily Reports View -->
+            <div id="daily-reports-view">
+                <div class="report-section">
+                    <h3>All Staff Reports (Last 40 Days)</h3>
+                    <div id="reports-container" class="report-list">
+                        <!-- Reports will be loaded here -->
+                    </div>
+                    
+                    <div class="delete-older-reports" id="delete-notice">
+                        Reports older than 40 days will be automatically deleted.
+                    </div>
                 </div>
-                
-                <div class="delete-older-reports" id="delete-notice">
-                    Reports older than 40 days will be automatically deleted.
+            </div>
+            
+            <!-- Summary Reports View -->
+            <div id="summary-reports-view" class="hidden">
+                <div class="report-section">
+                    <h3>AI Summarized Reports (Last 30 Days)</h3>
+                    <div id="summaries-container" class="report-list">
+                        <!-- Summaries will be loaded here -->
+                    </div>
+                    
+                    <div id="ai-processing" class="hidden">
+                        <p>Generating AI summaries... <span class="loading-spinner"></span></p>
+                    </div>
+                    
+                    <div class="delete-older-reports" id="summary-delete-notice">
+                        Summaries are based on reports from the last 30 days.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Staff Registration List View -->
+            <div id="staff-list-view" class="hidden">
+                <div class="report-section">
+                    <h3>Staff Registration List</h3>
+                    
+                    <div class="search-box">
+                        <input type="text" id="staff-search" placeholder="Search staff by email or name...">
+                        <button onclick="searchStaff()">Search</button>
+                    </div>
+                    
+                    <div id="staff-container" class="report-list">
+                        <!-- Staff list will be loaded here -->
+                    </div>
+                    
+                    <div id="staff-pagination" class="pagination">
+                        <button onclick="changePage(-1)">&laquo; Previous</button>
+                        <button class="active">1</button>
+                        <button onclick="changePage(1)">Next &raquo;</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -577,6 +828,8 @@
         let staffAccounts = JSON.parse(localStorage.getItem('staffAccounts')) || {};
         let reports = JSON.parse(localStorage.getItem('reports')) || [];
         let currentUser = null;
+        let currentPage = 1;
+        const itemsPerPage = 5;
         
         // Owner credentials
         const OWNER_EMAIL = "shreehariagencies12@gmail.com";
@@ -627,7 +880,14 @@
                 return;
             }
             
-            staffAccounts[email] = password;
+            // Add registration date
+            const registrationDate = new Date().toISOString().split('T')[0];
+            
+            staffAccounts[email] = {
+                password: password,
+                registrationDate: registrationDate
+            };
+            
             localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
             
             showMessage(messageDiv, "Account created successfully! You can now log in.", "success");
@@ -646,7 +906,7 @@
                 return;
             }
             
-            if (!staffAccounts[email] || staffAccounts[email] !== password) {
+            if (!staffAccounts[email] || staffAccounts[email].password !== password) {
                 showMessage(messageDiv, "Invalid email or password", "error");
                 return;
             }
@@ -942,6 +1202,419 @@
             if (deletedCount > 0) {
                 document.getElementById('delete-notice').textContent = 
                     `${deletedCount} reports older than 40 days were automatically deleted.`;
+            }
+        }
+        
+        // AI Summary Functions
+        function generateAISummary() {
+            const container = document.getElementById('summaries-container');
+            const processingDiv = document.getElementById('ai-processing');
+            
+            // Show loading indicator
+            processingDiv.classList.remove('hidden');
+            container.innerHTML = '';
+            
+            // Simulate AI processing time
+            setTimeout(() => {
+                // Get reports from the last 30 days
+                const thirtyDaysAgo = new Date(getCurrentIndiaTime());
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                
+                const recentReports = reports.filter(report => {
+                    const reportDate = new Date(report.date);
+                    return reportDate >= thirtyDaysAgo;
+                });
+                
+                if (recentReports.length === 0) {
+                    container.innerHTML = '<p>No reports from the last 30 days</p>';
+                    processingDiv.classList.add('hidden');
+                    return;
+                }
+                
+                // Group reports by employee
+                const reportsByEmployee = {};
+                recentReports.forEach(report => {
+                    if (!reportsByEmployee[report.email]) {
+                        reportsByEmployee[report.email] = [];
+                    }
+                    reportsByEmployee[report.email].push(report);
+                });
+                
+                // Generate summaries for each employee
+                Object.keys(reportsByEmployee).forEach(email => {
+                    const employeeReports = reportsByEmployee[email];
+                    
+                    // Create summary card
+                    const summaryCard = document.createElement('div');
+                    summaryCard.className = 'summary-card';
+                    
+                    const employeeHeader = document.createElement('div');
+                    employeeHeader.className = 'summary-employee';
+                    employeeHeader.textContent = `Employee: ${email}`;
+                    summaryCard.appendChild(employeeHeader);
+                    
+                    // Generate AI summary
+                    const summary = generateAIReportSummary(employeeReports);
+                    
+                    const summaryContent = document.createElement('div');
+                    summaryContent.className = 'summary-content';
+                    summaryContent.textContent = summary;
+                    summaryCard.appendChild(summaryContent);
+                    
+                    // Add AI badge
+                    const aiBadge = document.createElement('span');
+                    aiBadge.className = 'ai-badge';
+                    aiBadge.textContent = 'AI Generated';
+                    summaryCard.appendChild(aiBadge);
+                    
+                    container.appendChild(summaryCard);
+                });
+                
+                processingDiv.classList.add('hidden');
+            }, 2000); // Simulate 2 seconds processing time
+        }
+        
+        function generateAIReportSummary(employeeReports) {
+            // Simple AI summarization logic
+            let summary = '';
+            
+            // Count activities by category
+            let marketingCount = 0;
+            let collectionCount = 0;
+            let commissionTotal = 0;
+            let accountsCount = 0;
+            
+            let marketingHighlights = [];
+            let collectionHighlights = [];
+            let commissionHighlights = [];
+            let accountsHighlights = [];
+            
+            employeeReports.forEach(report => {
+                if (report.marketing) {
+                    marketingCount++;
+                    if (report.marketing.length > 50) {
+                        marketingHighlights.push(report.marketing.substring(0, 100) + '...');
+                    }
+                }
+                
+                if (report.collection) {
+                    collectionCount++;
+                    if (report.collection.length > 50) {
+                        collectionHighlights.push(report.collection.substring(0, 100) + '...');
+                    }
+                }
+                
+                if (report.commission) {
+                    commissionTotal++;
+                    if (report.commission.includes('₹') || report.commission.includes('$')) {
+                        commissionHighlights.push(report.commission);
+                    }
+                }
+                
+                if (report.accounts) {
+                    accountsCount++;
+                    if (report.accounts.length > 50) {
+                        accountsHighlights.push(report.accounts.substring(0, 100) + '...');
+                    }
+                }
+            });
+            
+            // Generate summary
+            summary += `Over the past 30 days, this employee has been active in ${marketingCount} marketing activities, `;
+            summary += `${collectionCount} collection activities, and completed ${accountsCount} accounts-related tasks. `;
+            
+            if (commissionTotal > 0) {
+                summary += `They have processed ${commissionTotal} commission-related transactions. `;
+            }
+            
+            // Add highlights
+            if (marketingHighlights.length > 0) {
+                summary += `Key marketing activities included: ${marketingHighlights.join('; ')}. `;
+            }
+            
+            if (collectionHighlights.length > 0) {
+                summary += `Notable collection activities: ${collectionHighlights.join('; ')}. `;
+            }
+            
+            if (commissionHighlights.length > 0) {
+                summary += `Commission transactions: ${commissionHighlights.join('; ')}. `;
+            }
+            
+            if (accountsHighlights.length > 0) {
+                summary += `Important accounts activities: ${accountsHighlights.join('; ')}. `;
+            }
+            
+            // Add overall assessment
+            if (marketingCount + collectionCount + commissionTotal + accountsCount > 20) {
+                summary += `The employee has shown high activity levels across all departments.`;
+            } else if (marketingCount + collectionCount + commissionTotal + accountsCount > 10) {
+                summary += `The employee has maintained consistent activity levels throughout the period.`;
+            } else {
+                summary += `The employee has focused on specific areas with targeted efforts.`;
+            }
+            
+            return summary;
+        }
+        
+        // Staff Registration List Functions
+        function loadStaffList() {
+            const container = document.getElementById('staff-container');
+            container.innerHTML = '';
+            
+            // Get all staff emails
+            const staffEmails = Object.keys(staffAccounts);
+            
+            if (staffEmails.length === 0) {
+                container.innerHTML = '<p>No staff registered yet</p>';
+                return;
+            }
+            
+            // Calculate pagination
+            const totalPages = Math.ceil(staffEmails.length / itemsPerPage);
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            
+            // Get current page items
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, staffEmails.length);
+            const currentStaff = staffEmails.slice(startIndex, endIndex);
+            
+            // Create staff cards
+            currentStaff.forEach(email => {
+                const staffData = staffAccounts[email];
+                
+                const staffCard = document.createElement('div');
+                staffCard.className = 'staff-card';
+                
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = 'staff-avatar';
+                // Get first letter of name for avatar
+                const initials = email.split('@')[0].charAt(0).toUpperCase();
+                avatarDiv.textContent = initials;
+                
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'staff-info';
+                
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'staff-name';
+                nameDiv.textContent = email;
+                
+                const emailDiv = document.createElement('div');
+                emailDiv.className = 'staff-email';
+                emailDiv.textContent = `Email: ${email}`;
+                
+                const regDateDiv = document.createElement('div');
+                regDateDiv.className = 'staff-registration-date';
+                regDateDiv.textContent = `Registered on: ${formatDate(staffData.registrationDate)}`;
+                
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'staff-actions';
+                
+                const viewBtn = document.createElement('button');
+                viewBtn.className = 'btn btn-sm';
+                viewBtn.textContent = 'View Reports';
+                viewBtn.onclick = function() {
+                    switchView('daily');
+                    loadAllReports();
+                    // Scroll to reports section
+                    document.getElementById('daily-reports-view').scrollIntoView({ behavior: 'smooth' });
+                };
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-sm back-btn';
+                deleteBtn.textContent = 'Delete Account';
+                deleteBtn.onclick = function() {
+                    if (confirm(`Are you sure you want to delete the account for ${email}?`)) {
+                        delete staffAccounts[email];
+                        localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
+                        loadStaffList();
+                        showMessage(document.getElementById('report-message'), `Account for ${email} has been deleted.`, 'success');
+                    }
+                };
+                
+                actionsDiv.appendChild(viewBtn);
+                actionsDiv.appendChild(deleteBtn);
+                
+                infoDiv.appendChild(nameDiv);
+                infoDiv.appendChild(emailDiv);
+                infoDiv.appendChild(regDateDiv);
+                
+                staffCard.appendChild(avatarDiv);
+                staffCard.appendChild(infoDiv);
+                staffCard.appendChild(actionsDiv);
+                
+                container.appendChild(staffCard);
+            });
+            
+            // Update pagination
+            updatePagination(totalPages);
+        }
+        
+        function updatePagination(totalPages) {
+            const pagination = document.getElementById('staff-pagination');
+            pagination.innerHTML = '';
+            
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            pagination.style.display = 'flex';
+            
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = 'Previous';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    loadStaffList();
+                }
+            };
+            pagination.appendChild(prevBtn);
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                pageBtn.className = i === currentPage ? 'active' : '';
+                pageBtn.onclick = function() {
+                    currentPage = i;
+                    loadStaffList();
+                };
+                pagination.appendChild(pageBtn);
+            }
+            
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = function() {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    loadStaffList();
+                }
+            };
+            pagination.appendChild(nextBtn);
+        }
+        
+        function changePage(direction) {
+            const totalPages = Math.ceil(Object.keys(staffAccounts).length / itemsPerPage);
+            if (direction === -1 && currentPage > 1) {
+                currentPage--;
+            } else if (direction === 1 && currentPage < totalPages) {
+                currentPage++;
+            }
+            loadStaffList();
+        }
+        
+        function searchStaff() {
+            const searchTerm = document.getElementById('staff-search').value.trim().toLowerCase();
+            const container = document.getElementById('staff-container');
+            container.innerHTML = '';
+            
+            // Filter staff based on search term
+            const filteredStaff = Object.keys(staffAccounts).filter(email => 
+                email.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredStaff.length === 0) {
+                container.innerHTML = '<p>No matching staff found</p>';
+                return;
+            }
+            
+            // Display filtered staff
+            filteredStaff.forEach(email => {
+                const staffData = staffAccounts[email];
+                
+                const staffCard = document.createElement('div');
+                staffCard.className = 'staff-card';
+                
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = 'staff-avatar';
+                const initials = email.split('@')[0].charAt(0).toUpperCase();
+                avatarDiv.textContent = initials;
+                
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'staff-info';
+                
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'staff-name';
+                nameDiv.textContent = email;
+                
+                const emailDiv = document.createElement('div');
+                emailDiv.className = 'staff-email';
+                emailDiv.textContent = `Email: ${email}`;
+                
+                const regDateDiv = document.createElement('div');
+                regDateDiv.className = 'staff-registration-date';
+                regDateDiv.textContent = `Registered on: ${formatDate(staffData.registrationDate)}`;
+                
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'staff-actions';
+                
+                const viewBtn = document.createElement('button');
+                viewBtn.className = 'btn btn-sm';
+                viewBtn.textContent = 'View Reports';
+                viewBtn.onclick = function() {
+                    switchView('daily');
+                    loadAllReports();
+                    document.getElementById('daily-reports-view').scrollIntoView({ behavior: 'smooth' });
+                };
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-sm back-btn';
+                deleteBtn.textContent = 'Delete Account';
+                deleteBtn.onclick = function() {
+                    if (confirm(`Are you sure you want to delete the account for ${email}?`)) {
+                        delete staffAccounts[email];
+                        localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
+                        loadStaffList();
+                        showMessage(document.getElementById('report-message'), `Account for ${email} has been deleted.`, 'success');
+                    }
+                };
+                
+                actionsDiv.appendChild(viewBtn);
+                actionsDiv.appendChild(deleteBtn);
+                
+                infoDiv.appendChild(nameDiv);
+                infoDiv.appendChild(emailDiv);
+                infoDiv.appendChild(regDateDiv);
+                
+                staffCard.appendChild(avatarDiv);
+                staffCard.appendChild(infoDiv);
+                staffCard.appendChild(actionsDiv);
+                
+                container.appendChild(staffCard);
+            });
+        }
+        
+        // View switching function
+        function switchView(view) {
+            if (view === 'daily') {
+                document.getElementById('daily-reports-btn').classList.add('active');
+                document.getElementById('summary-reports-btn').classList.remove('active');
+                document.getElementById('staff-list-btn').classList.remove('active');
+                document.getElementById('daily-reports-view').classList.remove('hidden');
+                document.getElementById('summary-reports-view').classList.add('hidden');
+                document.getElementById('staff-list-view').classList.add('hidden');
+            } else if (view === 'summary') {
+                document.getElementById('daily-reports-btn').classList.remove('active');
+                document.getElementById('summary-reports-btn').classList.add('active');
+                document.getElementById('staff-list-btn').classList.remove('active');
+                document.getElementById('daily-reports-view').classList.add('hidden');
+                document.getElementById('summary-reports-view').classList.remove('hidden');
+                document.getElementById('staff-list-view').classList.add('hidden');
+                generateAISummary();
+            } else if (view === 'staff') {
+                document.getElementById('daily-reports-btn').classList.remove('active');
+                document.getElementById('summary-reports-btn').classList.remove('active');
+                document.getElementById('staff-list-btn').classList.add('active');
+                document.getElementById('daily-reports-view').classList.add('hidden');
+                document.getElementById('summary-reports-view').classList.add('hidden');
+                document.getElementById('staff-list-view').classList.remove('hidden');
+                loadStaffList();
             }
         }
         
