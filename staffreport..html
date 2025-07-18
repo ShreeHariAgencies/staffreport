@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shree Hari Agencies - Daily Report System</title>
     <style>
+        /* CSS remains exactly the same as your original file */
         * {
             margin: 0;
             padding: 0;
@@ -846,13 +847,20 @@
     </footer>
 
     <script>
-        // Placeholder for user data (in a real application, this would be on a server)
+        // *** IMPORTANT: YOUR JSONBin.io KEYS AND IDs ARE SET HERE ***
+        const JSONBIN_SECRET_KEY = '$2a$10$vlNz95xI2evMW5E0BuhuoOF/yLfLgu/ZAN0c.ats6IvyeJKseTMgK';
+        const STAFF_BIN_ID = '687a8a004aa8c42c4e87388b';
+        const REPORTS_BIN_ID = '687a894411538d600f2aeba6';
+        // **************************************************************************
+
+        const JSONBIN_API_URL = 'https://api.jsonbin.io/v3/b/';
+
         let currentUser = null;
         let ownerLoggedIn = false;
-        let staffAccounts = JSON.parse(localStorage.getItem('staffAccounts')) || [];
-        let dailyReports = JSON.parse(localStorage.getItem('dailyReports')) || [];
+        let staffAccounts = []; // Will be loaded from JSONBin
+        let dailyReports = [];  // Will be loaded from JSONBin
         
-        // Owner credentials (for demonstration purposes only)
+        // Owner credentials (for demonstration purposes only) - These are NOT stored on JSONBin for simplicity
         const OWNER_EMAIL = "owner@shreehari.com";
         const OWNER_PASSWORD = "adminpassword"; // In a real app, use hashed passwords!
 
@@ -862,20 +870,70 @@
         const REPORTS_PAGE_SIZE = 5;
         let currentReportsPage = 1;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             // Display current date on staff dashboard
             const today = new Date();
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('current-date').textContent = `Today: ${today.toLocaleDateString('en-US', options)}`;
 
-            // Check if reports can be submitted (after 6 PM IST)
             checkSubmissionTime();
             setInterval(checkSubmissionTime, 60000); // Check every minute
             
+            await loadAllData(); // Load all data from JSONBin when the page loads
             showLoginScreen(); // Start with the login screen
-            loadStaffAccounts(); // Load staff accounts when page loads
-            loadAllReports(); // Load all reports for owner
         });
+
+        async function fetchBinData(binId) {
+            try {
+                const response = await fetch(`${JSONBIN_API_URL}${binId}`, {
+                    headers: {
+                        'X-Master-Key': JSONBIN_SECRET_KEY,
+                        'X-Bin-Meta': 'false' // Get only data, not metadata
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data.record; // JSONBin wraps data in a 'record' property
+            } catch (error) {
+                console.error(`Error fetching data from bin ${binId}:`, error);
+                alert(`Error loading data. Please check console. Is JSONBin.io setup correctly and are your keys/IDs correct?`);
+                return null;
+            }
+        }
+
+        async function updateBinData(binId, data) {
+            try {
+                const response = await fetch(`${JSONBIN_API_URL}${binId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_SECRET_KEY,
+                        'X-Bin-Meta': 'false'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                return result.record;
+            } catch (error) {
+                console.error(`Error updating data in bin ${binId}:`, error);
+                alert(`Error saving data. Please check console.`);
+                return null;
+            }
+        }
+
+        async function loadAllData() {
+            const staffData = await fetchBinData(STAFF_BIN_ID);
+            staffAccounts = (staffData && staffData.accounts) || [];
+
+            const reportsData = await fetchBinData(REPORTS_BIN_ID);
+            dailyReports = (reportsData && reportsData.reports) || [];
+            console.log("Data loaded:", { staffAccounts, dailyReports });
+        }
 
         function checkSubmissionTime() {
             const now = new Date();
@@ -905,7 +963,7 @@
             clearMessages(); // Clear any previous messages
         }
 
-        function showLoginScreen() {
+        async function showLoginScreen() {
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('create-account').classList.add('hidden');
             document.getElementById('staff-login').classList.add('hidden');
@@ -922,6 +980,8 @@
             document.getElementById('staff-password').value = '';
             document.getElementById('owner-email').value = '';
             document.getElementById('owner-password').value = '';
+
+            await loadAllData(); // Ensure latest data is loaded when returning to login
         }
 
         function clearMessages() {
@@ -940,8 +1000,8 @@
             element.classList.add(type);
         }
 
-        // --- Account Management (Client-Side Simulation) ---
-        function createAccount() {
+        // --- Account Management (using JSONBin.io) ---
+        async function createAccount() {
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
             const accountMessage = document.getElementById('account-message');
@@ -953,35 +1013,41 @@
                 return;
             }
 
-            // Simple validation (mimics backend requirements)
             const passwordRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{6,}$/;
             if (!passwordRegex.test(password)) {
                 showMessage('account-message', 'Password must contain at least 6 characters, one digit, and one special character.', 'error');
                 return;
             }
 
+            // Fetch latest staff accounts to prevent race conditions (important for multi-user)
+            await loadAllData(); 
             if (staffAccounts.find(account => account.email === email)) {
                 showMessage('account-message', 'Account with this email already exists.', 'error');
                 return;
             }
 
-            staffAccounts.push({ email, password: hashPassword(password), registrationDate: new Date().toISOString() }); // Store hashed password
-            localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
-            showMessage('account-message', 'Staff account created successfully! You can now login.', 'success');
+            staffAccounts.push({ email, password: hashPassword(password), registrationDate: new Date().toISOString() });
+            const updated = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
             
-            // Optionally, clear fields after successful creation
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
-
-            loadStaffAccounts(); // Refresh staff list for owner
+            if (updated) {
+                showMessage('account-message', 'Staff account created successfully! You can now login.', 'success');
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+                loadStaffAccounts(); // Refresh staff list for owner
+            } else {
+                showMessage('account-message', 'Failed to create account. Please try again.', 'error');
+                // Revert local staffAccounts if update failed
+                staffAccounts.pop();
+            }
         }
 
-        function staffLogin() {
+        async function staffLogin() {
             const email = document.getElementById('staff-email').value.trim();
             const password = document.getElementById('staff-password').value.trim();
             const loginMessage = document.getElementById('staff-login-message');
 
             clearMessages();
+            await loadAllData(); // Fetch latest staff accounts
 
             const staff = staffAccounts.find(account => account.email === email && account.password === hashPassword(password));
 
@@ -992,35 +1058,36 @@
                 setTimeout(() => {
                     showForm('staff-dashboard');
                     loadStaffReports(currentUser.email);
-                    clearReportForm(); // Clear the report form when entering dashboard
+                    clearReportForm();
                 }, 500);
             } else {
                 showMessage('staff-login-message', 'Invalid email or password.', 'error');
             }
         }
 
-        function ownerLogin() {
+        async function ownerLogin() {
             const email = document.getElementById('owner-email').value.trim();
             const password = document.getElementById('owner-password').value.trim();
             const loginMessage = document.getElementById('owner-login-message');
 
             clearMessages();
+            await loadAllData(); // Fetch latest reports and accounts for owner view
 
             if (email === OWNER_EMAIL && password === OWNER_PASSWORD) {
                 ownerLoggedIn = true;
-                currentUser = null; // Owner is not a staff user
+                currentUser = null;
                 showMessage('owner-login-message', 'Owner login successful!', 'success');
                 setTimeout(() => {
                     showForm('owner-dashboard');
-                    loadStaffAccounts(); // Reload staff accounts for owner view
-                    loadAllReports(); // Reload all reports for owner view
+                    loadStaffAccounts();
+                    loadAllReports();
                 }, 500);
             } else {
                 showMessage('owner-login-message', 'Invalid owner email or password.', 'error');
             }
         }
 
-        // Simple password hashing (for client-side demo, not secure for real apps)
+        // Simple password hashing (for client-side demo, NOT secure for real apps)
         function hashPassword(password) {
             return btoa(password); // Base64 encode for simple "hashing"
         }
@@ -1046,7 +1113,7 @@
             document.getElementById('confirm-modal').style.display = 'none';
         }
 
-        function submitReport() {
+        async function submitReport() {
             hideConfirmModal();
 
             if (!currentUser) {
@@ -1066,9 +1133,10 @@
             }
 
             const today = new Date();
-            const reportDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+            const reportDate = today.toISOString().split('T')[0];
 
-            // Check if a report for today already exists for this staff
+            await loadAllData(); // Fetch latest reports to avoid overwriting
+
             const existingReportIndex = dailyReports.findIndex(r => r.email === currentUser.email && r.date === reportDate);
 
             if (existingReportIndex !== -1) {
@@ -1088,20 +1156,27 @@
             };
 
             dailyReports.push(newReport);
-            localStorage.setItem('dailyReports', JSON.stringify(dailyReports));
-            alert('Daily report submitted successfully!');
-            clearReportForm();
-            loadStaffReports(currentUser.email); // Reload past reports for staff
-            loadAllReports(); // Reload all reports for owner
+            const updated = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+            
+            if (updated) {
+                alert('Daily report submitted successfully!');
+                clearReportForm();
+                loadStaffReports(currentUser.email); // Reload past reports for staff
+                loadAllReports(); // Reload all reports for owner
+            } else {
+                alert('Failed to submit report. Please try again.');
+                dailyReports.pop(); // Revert local change if update failed
+            }
         }
 
-        function loadStaffReports(email) {
+        async function loadStaffReports(email) {
+            await loadAllData(); // Ensure latest reports are fetched
             const pastReportsList = document.getElementById('past-reports-list');
-            pastReportsList.innerHTML = ''; // Clear previous reports
+            pastReportsList.innerHTML = '';
 
             const staffReports = dailyReports
                 .filter(report => report.email === email)
-                .sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by date descending
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (staffReports.length === 0) {
                 pastReportsList.innerHTML = '<p style="text-align: center; color: #666;">No past reports found.</p>';
@@ -1124,7 +1199,7 @@
             });
         }
 
-        function editReport() {
+        async function editReport() {
             if (!currentUser) {
                 alert('Error: No staff member logged in.');
                 showLoginScreen();
@@ -1133,6 +1208,7 @@
 
             const today = new Date();
             const reportDate = today.toISOString().split('T')[0];
+            await loadAllData(); // Fetch latest reports
             const existingReport = dailyReports.find(r => r.email === currentUser.email && r.date === reportDate);
             const editContainer = document.getElementById('edit-report-container');
 
@@ -1148,7 +1224,7 @@
             }
         }
 
-        function updateReport() {
+        async function updateReport() {
             if (!currentUser) {
                 alert('Error: No staff member logged in.');
                 showLoginScreen();
@@ -1157,6 +1233,7 @@
 
             const today = new Date();
             const reportDate = today.toISOString().split('T')[0];
+            await loadAllData(); // Fetch latest reports to avoid overwriting
             const existingReportIndex = dailyReports.findIndex(r => r.email === currentUser.email && r.date === reportDate);
 
             if (existingReportIndex === -1) {
@@ -1178,19 +1255,25 @@
             dailyReports[existingReportIndex].collection = collection;
             dailyReports[existingReportIndex].commission = commission;
             dailyReports[existingReportIndex].accounts = accounts;
-            dailyReports[existingReportIndex].timestamp = new Date().toISOString(); // Update timestamp
+            dailyReports[existingReportIndex].timestamp = new Date().toISOString();
 
-            localStorage.setItem('dailyReports', JSON.stringify(dailyReports));
-            alert('Daily report updated successfully!');
-            document.getElementById('edit-report-container').classList.add('hidden');
-            loadStaffReports(currentUser.email); // Reload staff reports
-            loadAllReports(); // Reload owner reports
+            const updated = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+            if (updated) {
+                alert('Daily report updated successfully!');
+                document.getElementById('edit-report-container').classList.add('hidden');
+                loadStaffReports(currentUser.email);
+                loadAllReports();
+            } else {
+                alert('Failed to update report. Please try again.');
+                // Handle reversion if update fails
+            }
         }
 
         // --- Owner Dashboard Functions ---
 
-        function loadStaffAccounts(page = 1) {
+        async function loadStaffAccounts(page = 1) {
             currentStaffPage = page;
+            await loadAllData(); // Fetch latest staff accounts
             const staffListDiv = document.getElementById('staff-list');
             staffListDiv.innerHTML = '';
             const staffPaginationDiv = document.getElementById('staff-pagination');
@@ -1199,7 +1282,7 @@
             const searchTerm = document.getElementById('staff-search').value.toLowerCase();
             const filteredStaff = staffAccounts.filter(staff =>
                 staff.email.toLowerCase().includes(searchTerm) ||
-                (staff.name && staff.name.toLowerCase().includes(searchTerm)) // Assuming staff might have names later
+                (staff.name && staff.name.toLowerCase().includes(searchTerm))
             );
 
             const startIndex = (currentStaffPage - 1) * STAFF_PAGE_SIZE;
@@ -1232,7 +1315,6 @@
                 staffListDiv.appendChild(staffCard);
             });
 
-            // Pagination buttons
             const totalPages = Math.ceil(filteredStaff.length / STAFF_PAGE_SIZE);
             for (let i = 1; i <= totalPages; i++) {
                 const button = document.createElement('button');
@@ -1244,17 +1326,18 @@
         }
 
         function searchStaff() {
-            loadStaffAccounts(1); // Reset to first page on search
+            loadStaffAccounts(1);
         }
 
         let staffToEdit = null;
         let staffToDelete = null;
 
-        function showEditStaffModal(email) {
+        async function showEditStaffModal(email) {
+            await loadAllData(); // Ensure latest staff data
             staffToEdit = staffAccounts.find(staff => staff.email === email);
             if (staffToEdit) {
                 document.getElementById('edit-staff-email').value = staffToEdit.email;
-                document.getElementById('edit-staff-password').value = ''; // Clear password field
+                document.getElementById('edit-staff-password').value = '';
                 document.getElementById('edit-staff-modal').style.display = 'flex';
             }
         }
@@ -1264,12 +1347,11 @@
             staffToEdit = null;
         }
 
-        function updateStaffAccount() {
+        async function updateStaffAccount() {
             if (!staffToEdit) return;
 
             const newPassword = document.getElementById('edit-staff-password').value.trim();
-            const editAccountMessage = document.getElementById('edit-staff-modal').querySelector('.status-message'); // A message element inside modal would be good
-            clearMessages(); // Clear main messages, could add one to modal too
+            // No specific message element for this modal in your original HTML. Using alert.
 
             if (newPassword) {
                 const passwordRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{6,}$/;
@@ -1280,14 +1362,18 @@
                 staffToEdit.password = hashPassword(newPassword);
             }
             
-            // In a real app, you'd send this update to the server
+            await loadAllData(); // Fetch latest staff accounts before updating
             const index = staffAccounts.findIndex(s => s.email === staffToEdit.email);
             if (index !== -1) {
                 staffAccounts[index] = staffToEdit;
-                localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
-                alert('Staff account updated successfully!');
-                hideEditStaffModal();
-                loadStaffAccounts(); // Refresh the list
+                const updated = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
+                if (updated) {
+                    alert('Staff account updated successfully!');
+                    hideEditStaffModal();
+                    loadStaffAccounts();
+                } else {
+                    alert('Failed to update staff account. Please try again.');
+                }
             }
         }
 
@@ -1301,21 +1387,39 @@
             staffToDelete = null;
         }
 
-        function deleteStaffAccount() {
+        async function deleteStaffAccount() {
             if (!staffToDelete) return;
+
+            await loadAllData(); // Fetch latest data before deletion
+
+            const originalStaffAccounts = [...staffAccounts]; // For potential rollback
+            const originalDailyReports = [...dailyReports];
 
             // Remove staff account
             staffAccounts = staffAccounts.filter(staff => staff.email !== staffToDelete);
-            localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
+            const staffUpdated = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
+
+            if (!staffUpdated) {
+                alert('Failed to delete staff account. Please try again.');
+                staffAccounts = originalStaffAccounts; // Revert
+                return;
+            }
 
             // Remove all reports associated with this staff
             dailyReports = dailyReports.filter(report => report.email !== staffToDelete);
-            localStorage.setItem('dailyReports', JSON.stringify(dailyReports));
+            const reportsUpdated = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
 
-            alert(`Staff account ${staffToDelete} and all their reports deleted successfully.`);
+            if (!reportsUpdated) {
+                alert('Staff account deleted, but failed to delete associated reports. Please manually clean up reports.');
+                dailyReports = originalDailyReports; // Revert reports only
+                // Note: In a real backend, this would be a single, transactional operation.
+            } else {
+                alert(`Staff account ${staffToDelete} and all their reports deleted successfully.`);
+            }
+
             hideDeleteStaffConfirmModal();
-            loadStaffAccounts(); // Refresh staff list
-            loadAllReports(); // Refresh all reports list
+            loadStaffAccounts();
+            loadAllReports();
             staffToDelete = null;
         }
 
@@ -1337,11 +1441,12 @@
                 listButton.classList.remove('active');
                 summaryButton.classList.add('active');
             }
-            loadAllReports(currentReportsPage, view); // Reload reports in the selected view
+            loadAllReports(currentReportsPage, view);
         }
 
-        function loadAllReports(page = 1, view = null) {
+        async function loadAllReports(page = 1, view = null) {
             currentReportsPage = page;
+            await loadAllData(); // Fetch latest reports
             const allReportsList = document.getElementById('all-reports-list');
             const allReportsSummary = document.getElementById('all-reports-summary');
             const reportPaginationDiv = document.getElementById('report-pagination');
@@ -1349,27 +1454,27 @@
             allReportsSummary.innerHTML = '';
             reportPaginationDiv.innerHTML = '';
 
-            // Sort reports by date descending, then by email for consistency
             const sortedReports = [...dailyReports].sort((a, b) => {
                 const dateA = new Date(b.date);
                 const dateB = new Date(a.date);
                 if (dateA - dateB !== 0) {
                     return dateA - dateB;
                 }
-                return a.email.localeCompare(b.email); // Secondary sort by email
+                return a.email.localeCompare(b.email);
             });
 
-            // Filter out reports older than 30 days
+            // Filter out reports older than 30 days and delete them from the bin
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            const filteredAndSortedReports = sortedReports.filter(report => new Date(report.date) >= thirtyDaysAgo);
+            const initialReportsCount = dailyReports.length;
+            dailyReports = sortedReports.filter(report => new Date(report.date) >= thirtyDaysAgo);
 
-            // Automatically delete older reports (simulated cleanup)
-            if (filteredAndSortedReports.length < dailyReports.length) {
-                dailyReports = filteredAndSortedReports;
-                localStorage.setItem('dailyReports', JSON.stringify(dailyReports));
+            if (dailyReports.length < initialReportsCount) {
+                console.log("Deleting older reports from JSONBin...");
+                await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
             }
 
+            const filteredAndSortedReports = dailyReports; // Use the potentially cleaned list
 
             const startIndex = (currentReportsPage - 1) * REPORTS_PAGE_SIZE;
             const endIndex = startIndex + REPORTS_PAGE_SIZE;
@@ -1381,17 +1486,15 @@
                 return;
             }
 
-            // Determine active view
             const activeViewButton = document.querySelector('.view-toggle button.active');
             const currentView = view || (activeViewButton ? activeViewButton.textContent.toLowerCase().includes('list') ? 'list' : 'summary' : 'list');
 
 
             paginatedReports.forEach(report => {
                 const staff = staffAccounts.find(s => s.email === report.email);
-                const staffDisplayName = staff ? staff.email : report.email; // Fallback to email if account not found (deleted)
+                const staffDisplayName = staff ? staff.email : report.email;
                 const reportDateFormatted = new Date(report.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
 
-                // List View Item
                 const listItem = document.createElement('div');
                 listItem.classList.add('report-item');
                 listItem.innerHTML = `
@@ -1409,7 +1512,6 @@
                 `;
                 allReportsList.appendChild(listItem);
 
-                // Summary View Item
                 const summaryCard = document.createElement('div');
                 summaryCard.classList.add('summary-card');
                 summaryCard.innerHTML = `
@@ -1437,8 +1539,6 @@
                 allReportsSummary.classList.remove('hidden');
             }
 
-
-            // Pagination buttons
             const totalPages = Math.ceil(filteredAndSortedReports.length / REPORTS_PAGE_SIZE);
             for (let i = 1; i <= totalPages; i++) {
                 const button = document.createElement('button');
@@ -1452,7 +1552,8 @@
         let reportToView = null;
         let reportToDeleteId = null;
 
-        function showViewReportModal(reportId) {
+        async function showViewReportModal(reportId) {
+            await loadAllData(); // Ensure latest reports
             reportToView = dailyReports.find(r => r.id === reportId);
             if (reportToView) {
                 const modalTitle = document.getElementById('view-report-title');
@@ -1488,17 +1589,26 @@
             reportToDeleteId = null;
         }
 
-        function deleteReport() {
+        async function deleteReport() {
             if (reportToDeleteId === null) return;
 
-            dailyReports = dailyReports.filter(report => report.id !== reportToDeleteId);
-            localStorage.setItem('dailyReports', JSON.stringify(dailyReports));
+            await loadAllData(); // Fetch latest reports before deletion
 
-            alert('Report deleted successfully.');
-            hideDeleteReportConfirmModal();
-            loadAllReports(currentReportsPage); // Reload owner reports after deletion
-            if (currentUser && !ownerLoggedIn) { // If a staff member deleted their own report
-                loadStaffReports(currentUser.email);
+            const originalDailyReports = [...dailyReports]; // For potential rollback
+
+            dailyReports = dailyReports.filter(report => report.id !== reportToDeleteId);
+            const updated = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+
+            if (updated) {
+                alert('Report deleted successfully.');
+                hideDeleteReportConfirmModal();
+                loadAllReports(currentReportsPage);
+                if (currentUser && !ownerLoggedIn) {
+                    loadStaffReports(currentUser.email);
+                }
+            } else {
+                alert('Failed to delete report. Please try again.');
+                dailyReports = originalDailyReports; // Revert
             }
             reportToDeleteId = null;
         }
