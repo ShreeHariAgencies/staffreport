@@ -835,6 +835,155 @@
         const OWNER_EMAIL = "shreehariagencies12@gmail.com";
         const OWNER_PASSWORD = "Pratik@3";
         
+        // GitHub Configuration
+        const GITHUB_USERNAME = 'YOUR_GITHUB_USERNAME';
+        const REPO_NAME = 'shree-hari-reports';
+        const ACCESS_TOKEN = 'YOUR_GITHUB_ACCESS_TOKEN';
+        const DATA_FILE = 'reports_data.json';
+        const STAFF_FILE = 'staff_data.json';
+        const BASE_URL = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents`;
+        
+        // Sync data with GitHub
+        async function syncWithGitHub() {
+            try {
+                // First try to load from GitHub
+                const loaded = await loadFromGitHub();
+                
+                if (!loaded) {
+                    // If no data on GitHub, push our local data
+                    await saveToGitHub();
+                }
+            } catch (error) {
+                console.error("Error syncing with GitHub:", error);
+            }
+        }
+        
+        async function loadFromGitHub() {
+            try {
+                // Load staff data
+                const staffResponse = await fetch(`${BASE_URL}/${STAFF_FILE}`, {
+                    headers: {
+                        'Authorization': `token ${ACCESS_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (staffResponse.ok) {
+                    const staffData = await staffResponse.json();
+                    const staffContent = JSON.parse(atob(staffData.content));
+                    
+                    // Merge with local staff data
+                    staffAccounts = {...staffContent, ...staffAccounts};
+                    localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
+                }
+                
+                // Load reports data
+                const reportsResponse = await fetch(`${BASE_URL}/${DATA_FILE}`, {
+                    headers: {
+                        'Authorization': `token ${ACCESS_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (reportsResponse.ok) {
+                    const reportsData = await reportsResponse.json();
+                    const reportsContent = JSON.parse(atob(reportsData.content));
+                    
+                    // Merge reports, keeping the most recent version of each
+                    const reportMap = new Map();
+                    
+                    // First add all local reports
+                    reports.forEach(report => {
+                        const key = `${report.email}_${report.date}`;
+                        reportMap.set(key, report);
+                    });
+                    
+                    // Then add GitHub reports, which will overwrite local ones if same key
+                    reportsContent.forEach(report => {
+                        const key = `${report.email}_${report.date}`;
+                        reportMap.set(key, report);
+                    });
+                    
+                    reports = Array.from(reportMap.values());
+                    localStorage.setItem('reports', JSON.stringify(reports));
+                }
+                
+                return true;
+            } catch (error) {
+                console.error("Error loading from GitHub:", error);
+                return false;
+            }
+        }
+        
+        async function saveToGitHub() {
+            try {
+                // Get current SHA for files (needed for updates)
+                let staffSha = '';
+                let reportsSha = '';
+                
+                const staffCheck = await fetch(`${BASE_URL}/${STAFF_FILE}`, {
+                    headers: {
+                        'Authorization': `token ${ACCESS_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (staffCheck.ok) {
+                    const staffData = await staffCheck.json();
+                    staffSha = staffData.sha;
+                }
+                
+                const reportsCheck = await fetch(`${BASE_URL}/${DATA_FILE}`, {
+                    headers: {
+                        'Authorization': `token ${ACCESS_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (reportsCheck.ok) {
+                    const reportsData = await reportsCheck.json();
+                    reportsSha = reportsData.sha;
+                }
+                
+                // Save staff data
+                const staffContent = btoa(JSON.stringify(staffAccounts));
+                await fetch(`${BASE_URL}/${STAFF_FILE}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${ACCESS_TOKEN}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Update staff data',
+                        content: staffContent,
+                        sha: staffSha || undefined
+                    })
+                });
+                
+                // Save reports data
+                const reportsContent = btoa(JSON.stringify(reports));
+                await fetch(`${BASE_URL}/${DATA_FILE}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${ACCESS_TOKEN}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Update reports data',
+                        content: reportsContent,
+                        sha: reportsSha || undefined
+                    })
+                });
+                
+                return true;
+            } catch (error) {
+                console.error("Error saving to GitHub:", error);
+                return false;
+            }
+        }
+        
         // Navigation functions
         function showLoginScreen() {
             document.getElementById('login-screen').classList.remove('hidden');
@@ -855,7 +1004,7 @@
         }
         
         // Account creation
-        function createAccount() {
+        async function createAccount() {
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const messageDiv = document.getElementById('account-message');
@@ -888,11 +1037,21 @@
                 registrationDate: registrationDate
             };
             
+            // Save to localStorage
             localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
             
-            showMessage(messageDiv, "Account created successfully! You can now log in.", "success");
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
+            // Sync with GitHub
+            const saved = await saveToGitHub();
+            
+            if (saved) {
+                showMessage(messageDiv, "Account created successfully! You can now log in.", "success");
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+            } else {
+                showMessage(messageDiv, "Account created but could not sync with cloud. Works offline only.", "warning");
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+            }
         }
         
         // Login functions
@@ -1027,7 +1186,7 @@
             document.getElementById('confirm-modal').style.display = 'none';
         }
         
-        function confirmSubmitReport() {
+        async function confirmSubmitReport() {
             const marketing = document.getElementById('marketing-content').value.trim();
             const collection = document.getElementById('collection-content').value.trim();
             const commission = document.getElementById('commission-content').value.trim();
@@ -1044,12 +1203,19 @@
                 accounts: accounts
             });
             
-            // Save data and clean up old reports
-            saveData();
+            // Save to localStorage
+            localStorage.setItem('reports', JSON.stringify(reports));
+            
+            // Save to GitHub
+            const saved = await saveToGitHub();
             cleanOldReports();
             
-            closeModal();
-            showMessage(document.getElementById('report-message'), "Report submitted successfully!", "success");
+            if (saved) {
+                closeModal();
+                showMessage(document.getElementById('report-message'), "Report submitted successfully!", "success");
+            } else {
+                showMessage(document.getElementById('report-message'), "Report submitted but could not sync with cloud. Works offline only.", "warning");
+            }
             
             // Clear all textareas
             document.getElementById('marketing-content').value = '';
@@ -1076,7 +1242,7 @@
             document.getElementById('edit-report-container').classList.remove('hidden');
         }
         
-        function updateReport() {
+        async function updateReport() {
             const today = getCurrentIndiaTime().toISOString().split('T')[0];
             const todayReportIndex = reports.findIndex(r => r.email === currentUser.email && r.date === today);
             
@@ -1105,10 +1271,19 @@
                 accounts: accounts
             };
             
-            saveData();
+            // Save to localStorage
+            localStorage.setItem('reports', JSON.stringify(reports));
             
-            document.getElementById('edit-report-container').classList.add('hidden');
-            showMessage(document.getElementById('report-message'), "Report updated successfully!", "success");
+            // Save to GitHub
+            const saved = await saveToGitHub();
+            
+            if (saved) {
+                document.getElementById('edit-report-container').classList.add('hidden');
+                showMessage(document.getElementById('report-message'), "Report updated successfully!", "success");
+            } else {
+                document.getElementById('edit-report-container').classList.add('hidden');
+                showMessage(document.getElementById('report-message'), "Report updated but could not sync with cloud. Works offline only.", "warning");
+            }
         }
         
         function cancelEdit() {
@@ -1424,12 +1599,21 @@
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'btn btn-sm back-btn';
                 deleteBtn.textContent = 'Delete Account';
-                deleteBtn.onclick = function() {
+                deleteBtn.onclick = async function() {
                     if (confirm(`Are you sure you want to delete the account for ${email}?`)) {
                         delete staffAccounts[email];
                         localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
-                        loadStaffList();
-                        showMessage(document.getElementById('report-message'), `Account for ${email} has been deleted.`, 'success');
+                        
+                        // Sync with GitHub
+                        const saved = await saveToGitHub();
+                        
+                        if (saved) {
+                            loadStaffList();
+                            showMessage(document.getElementById('report-message'), `Account for ${email} has been deleted.`, 'success');
+                        } else {
+                            loadStaffList();
+                            showMessage(document.getElementById('report-message'), `Account deleted locally but could not sync with cloud.`, 'warning');
+                        }
                     }
                 };
                 
@@ -1566,12 +1750,21 @@
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'btn btn-sm back-btn';
                 deleteBtn.textContent = 'Delete Account';
-                deleteBtn.onclick = function() {
+                deleteBtn.onclick = async function() {
                     if (confirm(`Are you sure you want to delete the account for ${email}?`)) {
                         delete staffAccounts[email];
                         localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
-                        loadStaffList();
-                        showMessage(document.getElementById('report-message'), `Account for ${email} has been deleted.`, 'success');
+                        
+                        // Sync with GitHub
+                        const saved = await saveToGitHub();
+                        
+                        if (saved) {
+                            loadStaffList();
+                            showMessage(document.getElementById('report-message'), `Account for ${email} has been deleted.`, 'success');
+                        } else {
+                            loadStaffList();
+                            showMessage(document.getElementById('report-message'), `Account deleted locally but could not sync with cloud.`, 'warning');
+                        }
                     }
                 };
                 
@@ -1681,16 +1874,19 @@
             
             if (initialCount !== reports.length) {
                 localStorage.setItem('reports', JSON.stringify(reports));
+                saveToGitHub(); // Sync with GitHub
             }
         }
         
-        function saveData() {
-            localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
-            localStorage.setItem('reports', JSON.stringify(reports));
-        }
-        
         // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // First load from localStorage
+            staffAccounts = JSON.parse(localStorage.getItem('staffAccounts')) || {};
+            reports = JSON.parse(localStorage.getItem('reports')) || [];
+            
+            // Then sync with GitHub
+            await syncWithGitHub();
+            
             showLoginScreen();
         });
     </script>
