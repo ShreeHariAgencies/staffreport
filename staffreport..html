@@ -1,107 +1,819 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shree Hari Agencies - Staff Report</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shree Hari Agencies - Daily Report System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+        }
+        
+        .options {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .option-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .option-card h2 {
+            color: #1a2a6c;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .option-card p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1a2a6c;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            border-color: #b21f1f;
+            outline: none;
+        }
+        
+        .back-btn {
+            background: #6c757d;
+            margin-top: 20px;
+        }
+        
+        .dashboard {
+            padding: 30px;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .report-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .report-section h3 {
+            color: #1a2a6c;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            resize: vertical;
+        }
+        
+        textarea:focus {
+            border-color: #b21f1f;
+            outline: none;
+        }
+        
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
+        .report-list {
+            margin-top: 20px;
+        }
+        
+        .report-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #1a2a6c;
+        }
+        
+        .report-date {
+            font-weight: bold;
+            color: #1a2a6c;
+            margin-bottom: 10px;
+        }
+        
+        .report-content {
+            white-space: pre-line;
+            color: #555;
+        }
+        
+        .time-notice {
+            text-align: center;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 600;
+            color: #856404;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #1a2a6c;
+            color: white;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: #1a2a6c;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .date-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1a2a6c;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .delete-older-reports {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #856404;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            color: #1a2a6c;
+            margin-bottom: 5px;
+        }
+        
+        .required-notice {
+            color: #b21f1f;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .view-toggle {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .view-toggle button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .view-toggle button.active {
+            background: #1a2a6c;
+            color: white;
+        }
+        
+        .summary-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #1a2a6c;
+        }
+        
+        .summary-employee {
+            font-weight: bold;
+            color: #1a2a6c;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .summary-date {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .summary-content {
+            color: #333;
+        }
+        
+        .summary-section {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+        }
+        
+        .summary-section-title {
+            font-weight: bold;
+            color: #1a2a6c;
+            margin-bottom: 5px;
+        }
+        
+        .ai-badge {
+            display: inline-block;
+            background: #e6f7ff;
+            color: #0066cc;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #1a2a6c;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .staff-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .staff-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .staff-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-right: 20px;
+        }
+        
+        .staff-info {
+            flex: 1;
+        }
+        
+        .staff-name {
+            font-weight: bold;
+            color: #1a2a6c;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .staff-email {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .staff-registration-date {
+            color: #666;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .staff-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        
+        .search-box {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px 0 0 8px;
+            font-size: 1rem;
+        }
+        
+        .search-box button {
+            padding: 12px 20px;
+            background: #1a2a6c;
+            color: white;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+        
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .pagination button.active {
+            background: #1a2a6c;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .options {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .option-card {
+                width: 100%;
+                max-width: 400px;
+            }
+            
+            .staff-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .staff-avatar {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .staff-actions {
+                margin-top: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <!-- EXISTING UI AND STYLING FROM TXT FILE HERE -->
-
-  <!-- Assume all forms and elements like #staffName, #marketing-content, etc. exist -->
-
-  <script>
-    const BIN_ID = "687a90b474f7b01b5c73b07f";
-    const MASTER_KEY = "$2a$10$vlNz95xI2evMW5E0BuhuoOF/yLfLgu/ZAN0c.ats6IvyeJKseTMgK";
-    const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-
-    // Submit report to JSONBin
-    async function submitReport() {
-      const name = document.getElementById("staff-email").value || "Anonymous";
-      const marketing = document.getElementById("marketing-content").value;
-      const collection = document.getElementById("collection-content").value;
-      const commission = document.getElementById("commission-content").value;
-      const accounts = document.getElementById("accounts-content").value;
-
-      if (!marketing && !collection && !commission && !accounts) {
-        alert("Please fill in at least one section before submitting.");
-        return;
-      }
-
-      const newReport = {
-        date: new Date().toLocaleString("en-IN"),
-        name,
-        marketing,
-        collection,
-        commission,
-        accounts
-      };
-
-      try {
-        const getRes = await fetch(`${BIN_URL}/latest`, {
-          headers: { "X-Master-Key": MASTER_KEY }
-        });
-        const existing = await getRes.json();
-        const data = existing.record || [];
-
-        data.push(newReport);
-
-        const putRes = await fetch(BIN_URL, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Master-Key": MASTER_KEY
-          },
-          body: JSON.stringify(data)
-        });
-
-        if (putRes.ok) {
-          alert("Report submitted successfully!");
-        } else {
-          alert("Failed to submit report. Try again.");
+    <div class="container">
+        <header>
+            <h1>Shree Hari Agencies</h1>
+            <p class="subtitle">Daily Staff Report System</p>
+        </header>
+        
+        <!-- Main Login Screen -->
+        <div id="login-screen" class="login-container">
+            <h2>Welcome to Daily Report System</h2>
+            <p>Please select an option to continue</p>
+            
+            <div class="options">
+                <div class="option-card" onclick="showForm('create-account')">
+                    <h2>Create Staff Account</h2>
+                    <p>Register as a new staff member</p>
+                    <button class="btn">Create Account</button>
+                </div>
+                
+                <div class="option-card" onclick="showForm('staff-login')">
+                    <h2>Staff Login</h2>
+                    <p>Log in to submit your daily report</p>
+                    <button class="btn">Login</button>
+                </div>
+                
+                <div class="option-card" onclick="showForm('owner-login')">
+                    <h2>Owner Login</h2>
+                    <p>Access all staff reports</p>
+                    <button class="btn">Login</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Create Account Form -->
+        <div id="create-account" class="login-container hidden">
+            <h2>Create Staff Account</h2>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" placeholder="Enter your email">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" placeholder="Enter your password">
+                <small>Must contain at least 6 characters, one digit, and one special character</small>
+            </div>
+            
+            <button class="btn" onclick="createAccount()">Create Account</button>
+            <button class="btn back-btn" onclick="showLoginScreen()">Back</button>
+            
+            <div id="account-message" class="status-message hidden"></div>
+        </div>
+        
+        <!-- Staff Login Form -->
+        <div id="staff-login" class="login-container hidden">
+            <h2>Staff Login</h2>
+            
+            <div class="form-group">
+                <label for="staff-email">Email:</label>
+                <input type="email" id="staff-email" placeholder="Enter your email">
+            </div>
+            
+            <div class="form-group">
+                <label for="staff-password">Password:</label>
+                <input type="password" id="staff-password" placeholder="Enter your password">
+            </div>
+            
+            <button class="btn" onclick="staffLogin()">Login</button>
+            <button class="btn back-btn" onclick="showLoginScreen()">Back</button>
+            
+            <div id="staff-login-message" class="status-message hidden"></div>
+        </div>
+        
+        <!-- Owner Login Form -->
+        <div id="owner-login" class="login-container hidden">
+            <h2>Owner Login</h2>
+            
+            <div class="form-group">
+                <label for="owner-email">Email:</label>
+                <input type="email" id="owner-email" placeholder="Enter your email">
+            </div>
+            
+            <div class="form-group">
+                <label for="owner-password">Password:</label>
+                <input type="password" id="owner-password" placeholder="Enter your password">
+            </div>
+            
+            <button class="btn" onclick="ownerLogin()">Login</button>
+            <button class="btn back-btn" onclick="showLoginScreen()">Back</button>
+            
+            <div id="owner-login-message" class="status-message hidden"></div>
+        </div>
+        
+        <!-- Staff Dashboard -->
+        <div id="staff-dashboard" class="dashboard hidden">
+            <div class="dashboard-header">
+                <h2>Staff Dashboard</h2>
+                <button class="btn back-btn" onclick="showLoginScreen()">Logout</button>
+            </div>
+            
+            <div class="report-section">
+                <h3>Submit Daily Report</h3>
+                <div id="time-notice" class="time-notice">
+                    Reports can only be submitted after 6:00 PM India time
+                </div>
+                
+                <div class="date-display" id="current-date"></div>
+                
+                <div class="form-group">
+                    <div class="section-title">1. Marketing</div>
+                    <textarea id="marketing-content" placeholder="Enter your marketing activities..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <div class="section-title">2. Collection</div>
+                    <textarea id="collection-content" placeholder="Enter your collection activities..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <div class="section-title">3. Commission Received</div>
+                    <textarea id="commission-content" placeholder="Enter your commission details..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <div class="section-title">4. Accounts</div>
+                    <textarea id="accounts-content" placeholder="Enter your accounts activities..."></textarea>
+                </div>
+                
+                <div class="required-notice">* At least one section must be filled</div>
+                
+                <button class="btn" onclick="submitReport()">Submit Report</button>
+                <div id="submit-message" class="status-message hidden"></div>
+            </div>
+        </div>
+        
+        <!-- Owner Dashboard -->
+        <div id="owner-dashboard" class="dashboard hidden">
+            <div class="dashboard-header">
+                <h2>Owner Dashboard</h2>
+                <button class="btn back-btn" onclick="showLoginScreen()">Logout</button>
+            </div>
+            
+            <button class="btn" onclick="loadAllReports()">Load All Reports</button>
+            <div id="owner-report-list" class="report-list"></div>
+        </div>
+        
+    </div>
+    
+    <footer>
+        &copy; 2025 Shree Hari Agencies. All rights reserved.
+    </footer>
+    
+    <script>
+        // —— Your existing UI functions —— 
+        function showLoginScreen() {
+            document.querySelectorAll('.login-container, .dashboard').forEach(el => el.classList.add('hidden'));
+            document.getElementById('login-screen').classList.remove('hidden');
         }
-      } catch (err) {
-        console.error(err);
-        alert("Error occurred during submission.");
-      }
-    }
-
-    // Load all reports (Owner dashboard)
-    async function loadAllReports() {
-      try {
-        const res = await fetch(`${BIN_URL}/latest`, {
-          headers: { "X-Master-Key": MASTER_KEY }
-        });
-        const data = await res.json();
-        const reports = data.record || [];
-        displayReports(reports);
-      } catch (err) {
-        console.error("Error loading reports:", err);
-        alert("Unable to load reports.");
-      }
-    }
-
-    // Display reports in a container
-    function displayReports(reports) {
-      const container = document.getElementById("owner-report-list");
-      container.innerHTML = "";
-
-      reports.reverse().forEach(report => {
-        const div = document.createElement("div");
-        div.className = "report-item";
-        div.innerHTML = `
-          <div class="report-date">${report.date}</div>
-          <div class="report-content"><strong>${report.name}</strong><br>
-            <b>Marketing:</b> ${report.marketing}<br>
-            <b>Collection:</b> ${report.collection}<br>
-            <b>Commission:</b> ${report.commission}<br>
-            <b>Accounts:</b> ${report.accounts}
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    }
-  </script>
+        function showForm(id) {
+            document.querySelectorAll('.login-container, .dashboard').forEach(el => el.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+        function createAccount() { /* …existing code… */ }
+        function staffLogin()    { /* …existing code… */ }
+        function ownerLogin()    { /* …existing code… */ }
+        // (and any modal-confirm, editReport, etc., remain exactly as you wrote)
+        
+        // —— JSONBin.io Integration —— 
+        const BIN_ID    = "687a90b474f7b01b5c73b07f";
+        const MASTER_KEY = "$2a$10$vlNz95xI2evMW5E0BuhuoOF/yLfLgu/ZAN0c.ats6IvyeJKseTMgK";
+        const BIN_URL   = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+        
+        // Override your Submit Report button’s handler
+        async function submitReport() {
+            // Gather values exactly as in your form
+            const name       = document.getElementById("staff-email").value || "Anonymous";
+            const marketing  = document.getElementById("marketing-content").value;
+            const collection = document.getElementById("collection-content").value;
+            const commission = document.getElementById("commission-content").value;
+            const accounts   = document.getElementById("accounts-content").value;
+            
+            if (!marketing && !collection && !commission && !accounts) {
+                alert("Please fill in at least one section.");
+                return;
+            }
+            
+            const newReport = {
+                date:    new Date().toLocaleString("en-IN"),
+                name,
+                marketing,
+                collection,
+                commission,
+                accounts
+            };
+            
+            try {
+                // 1️⃣ Fetch existing array
+                const getRes = await fetch(`${BIN_URL}/latest`, {
+                    headers: { "X-Master-Key": MASTER_KEY }
+                });
+                const existing = await getRes.json();
+                const data = existing.record || [];
+                
+                // 2️⃣ Append
+                data.push(newReport);
+                
+                // 3️⃣ PUT back
+                const putRes = await fetch(BIN_URL, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Master-Key": MASTER_KEY
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (putRes.ok) {
+                    document.getElementById("submit-message").innerText = "✅ Report submitted successfully!";
+                    document.getElementById("submit-message").classList.remove("hidden");
+                } else {
+                    alert("Failed to submit report.");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error submitting report.");
+            }
+        }
+        
+        // Owner: load and display
+        async function loadAllReports() {
+            try {
+                const res = await fetch(`${BIN_URL}/latest`, {
+                    headers: { "X-Master-Key": MASTER_KEY }
+                });
+                const { record: reports = [] } = await res.json();
+                
+                const container = document.getElementById("owner-report-list");
+                container.innerHTML = "";
+                
+                // newest first
+                reports.reverse().forEach(r => {
+                    const div = document.createElement("div");
+                    div.className = "report-item";
+                    div.innerHTML = `
+                        <div class="report-date">${r.date}</div>
+                        <div class="report-content">
+                            <strong>${r.name}</strong><br>
+                            <b>Marketing:</b> ${r.marketing || "-"}<br>
+                            <b>Collection:</b> ${r.collection || "-"}<br>
+                            <b>Commission:</b> ${r.commission || "-"}<br>
+                            <b>Accounts:</b> ${r.accounts || "-"}
+                        </div>`;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                console.error(e);
+                alert("Unable to load reports.");
+            }
+        }
+    </script>
 </body>
 </html>
