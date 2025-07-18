@@ -1,3 +1,31 @@
+Okay, I understand. You want to consolidate both your staff accounts and daily reports into a single JSONBin.io bin with the ID `687a90b474f7b01b5c73b07f`.
+
+I have updated the `STAFF_BIN_ID` and `REPORTS_BIN_ID` constants in the HTML/JavaScript code to use this new single ID.
+
+**Important Instructions for Your JSONBin.io Setup:**
+
+Since you are now using **one bin for both types of data**, its initial content structure is critical for the application to work correctly.
+
+1.  **Log in to your JSONBin.io account.**
+2.  **Ensure you have a bin with the ID: `687a90b474f7b01b5c73b07f`.**
+      * If it doesn't exist, create a **new private bin** and set its ID to `687a90b474f7b01b5c73b07f`.
+      * **The initial content of this specific bin (ID: `687a90b474f7b01b5c73b07f`) MUST be exactly as follows:**
+        ```json
+        {
+          "accounts": [],
+          "reports": []
+        }
+        ```
+        This ensures the code can find both the `accounts` array for staff and the `reports` array for daily entries. If the bin is empty or has incorrect JSON, you will encounter errors.
+3.  **Verify your Master Key:** Double-check that the `JSONBIN_SECRET_KEY` in the code below (`$2a$10$vlNz95xI2evMW5E0BuhuoOF/yLfLgu/ZAN0c.ats6IvyeJKseTMgK`) exactly matches your JSONBin.io Master Key, and that this key has **both read and write permissions** enabled.
+
+Once you have verified the bin ID, its initial content, and your Master Key on JSONBin.io, replace your existing `staffreport.html` file content with the code below, then refresh your website.
+
+If you still encounter issues, please open your browser's **Developer Console (F12)** and check the "Console" tab for any red error messages. These messages will provide more specific details about what might be going wrong with the connection to JSONBin.io.
+
+Here is the updated HTML code:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -850,16 +878,15 @@
         // IMPORTANT: YOUR JSONBin.io KEYS AND IDs ARE SET HERE
         // These values MUST be correct for the application to work.
         const JSONBIN_SECRET_KEY = '$2a$10$vlNz95xI2evMW5E0BuhuoOF/yLfLgu/ZAN0c.ats6IvyeJKseTMgK'; // Your JSONBin.io Master Key
-        const STAFF_BIN_ID = '687a8a004aa8c42c4e87388b'; // Your staff accounts bin ID
-        const REPORTS_BIN_ID = '687a894411538d600f2aeba6'; // Your daily reports bin ID
+        // Both staff accounts and reports will now use this single bin ID
+        const MAIN_BIN_ID = '687a90b474f7b01b5c73b07f'; 
         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         const JSONBIN_API_URL = 'https://api.jsonbin.io/v3/b/';
 
         let currentUser = null;
         let ownerLoggedIn = false;
-        let staffAccounts = []; // Will be loaded from JSONBin
-        let dailyReports = [];  // Will be loaded from JSONBin
+        let mainBinData = { accounts: [], reports: [] }; // Holds both accounts and reports
         
         // Owner credentials (for demonstration purposes only - NEVER use hardcoded passwords in a production app!)
         const OWNER_EMAIL = "owner@shreehari.com";
@@ -891,11 +918,11 @@
             console.log("Initialization complete. Showing login screen.");
         });
 
-        // Fetches data from a specified JSONBin.io bin.
-        async function fetchBinData(binId) {
-            console.log(`Attempting to fetch data from bin: ${binId}`);
+        // Fetches data from the main JSONBin.io bin.
+        async function fetchBinData() {
+            console.log(`Attempting to fetch data from main bin: ${MAIN_BIN_ID}`);
             try {
-                const response = await fetch(`${JSONBIN_API_URL}${binId}`, {
+                const response = await fetch(`${JSONBIN_API_URL}${MAIN_BIN_ID}`, {
                     headers: {
                         'X-Master-Key': JSONBIN_SECRET_KEY,
                         'X-Bin-Meta': 'false' // Get only data, not metadata
@@ -903,43 +930,53 @@
                 });
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error(`Error fetching data from bin ${binId}. Status: ${response.status} ${response.statusText}. Response Body:`, errorText);
+                    console.error(`Error fetching data from bin ${MAIN_BIN_ID}. Status: ${response.status} ${response.statusText}. Response Body:`, errorText);
                     // Provide a more user-friendly alert for common issues
-                    let alertMsg = `Error loading data from JSONBin.io for bin ${binId}.`;
+                    let alertMsg = `Error loading data from JSONBin.io for bin ${MAIN_BIN_ID}.`;
                     if (response.status === 401 || response.status === 403) {
                         alertMsg += " Check your Secret Key's validity and permissions.";
                     } else if (response.status === 404) {
                         alertMsg += " Bin not found. Ensure the Bin ID is correct.";
-                    } else {
-                        alertMsg += " Please check your browser's console (F12) for detailed errors.";
+                    } else if (response.status === 400) {
+                         alertMsg += " Bad request, possibly malformed JSON body or bin not set to public/private correctly.";
                     }
-                    alert(alertMsg);
+                    alert(alertMsg + " Please check your browser's console (F12) for detailed errors. Ensure your bin's initial content is correct (e.g., {\"accounts\": [], \"reports\": []}).");
                     throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}.`);
                 }
                 const data = await response.json();
                 if (!data || !data.record) {
-                    console.error(`Unexpected data structure from bin ${binId}:`, data);
-                    alert(`Received invalid data structure from JSONBin.io for bin ${binId}. Ensure the bin's content is a JSON object with a 'record' property, e.g., {"accounts": []} or {"reports": []}.`);
+                    console.error(`Unexpected data structure from bin ${MAIN_BIN_ID}:`, data);
+                    alert(`Received invalid data structure from JSONBin.io for bin ${MAIN_BIN_ID}. Ensure the bin's content is a JSON object with a 'record' property, e.g., {\"accounts\": [], \"reports\": []}.`);
                     throw new Error('Invalid data structure received from JSONBin.io. Expected a "record" property.');
                 }
-                console.log(`Successfully fetched data from bin ${binId}. Data:`, data.record);
-                return data.record;
+                // Important: Ensure the fetched record contains both 'accounts' and 'reports'
+                const fetchedRecord = data.record;
+                if (!Array.isArray(fetchedRecord.accounts)) {
+                    fetchedRecord.accounts = []; // Initialize if missing
+                    console.warn(`'accounts' array missing in bin ${MAIN_BIN_ID} record. Initialized as empty.`);
+                }
+                if (!Array.isArray(fetchedRecord.reports)) {
+                    fetchedRecord.reports = []; // Initialize if missing
+                    console.warn(`'reports' array missing in bin ${MAIN_BIN_ID} record. Initialized as empty.`);
+                }
+                console.log(`Successfully fetched data from bin ${MAIN_BIN_ID}. Data:`, fetchedRecord);
+                return fetchedRecord;
             } catch (error) {
-                console.error(`Exception during fetchBinData for bin ${binId}:`, error);
+                console.error(`Exception during fetchBinData for bin ${MAIN_BIN_ID}:`, error);
                 // The more specific alert is already given above if response.ok is false
                 // This catch is for network errors or errors thrown by data parsing
                 if (!error.message.includes("Failed to fetch data")) { // Avoid double alerts
-                    alert(`Network or parsing error loading data from JSONBin.io for bin ${binId}. See console for details.`);
+                    alert(`Network or parsing error loading data from JSONBin.io for bin ${MAIN_BIN_ID}. See console for details.`);
                 }
                 return null;
             }
         }
 
-        // Updates data in a specified JSONBin.io bin.
-        async function updateBinData(binId, data) {
-            console.log(`Attempting to update data in bin: ${binId} with data:`, data);
+        // Updates data in the main JSONBin.io bin.
+        async function updateBinData(data) {
+            console.log(`Attempting to update data in main bin: ${MAIN_BIN_ID} with data:`, data);
             try {
-                const response = await fetch(`${JSONBIN_API_URL}${binId}`, {
+                const response = await fetch(`${JSONBIN_API_URL}${MAIN_BIN_ID}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -950,29 +987,29 @@
                 });
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error(`Error updating data in bin ${binId}. Status: ${response.status} ${response.statusText}. Response Body:`, errorText);
-                    let alertMsg = `Error saving data to JSONBin.io for bin ${binId}.`;
+                    console.error(`Error updating data in bin ${MAIN_BIN_ID}. Status: ${response.status} ${response.statusText}. Response Body:`, errorText);
+                    let alertMsg = `Error saving data to JSONBin.io for bin ${MAIN_BIN_ID}.`;
                     if (response.status === 401 || response.status === 403) {
                         alertMsg += " Check your Secret Key's validity and write permissions.";
                     } else if (response.status === 400) {
-                         alertMsg += " Bad request, possibly malformed JSON body.";
+                         alertMsg += " Bad request, possibly malformed JSON body or bin not set to public/private correctly.";
                     }
                     alert(alertMsg + " Please check your browser's console (F12) for detailed errors.");
                     throw new Error(`Failed to update data: ${response.status} ${response.statusText}.`);
                 }
                 const result = await response.json();
                 if (!result || !result.record) {
-                     console.error(`Unexpected data structure after updating bin ${binId}:`, result);
-                     alert(`Received invalid response structure after updating JSONBin.io for bin ${binId}.`);
+                     console.error(`Unexpected data structure after updating bin ${MAIN_BIN_ID}:`, result);
+                     alert(`Received invalid response structure after updating JSONBin.io for bin ${MAIN_BIN_ID}.`);
                      throw new Error('Invalid response structure after updating JSONBin.io. Expected a "record" property.');
                 }
-                console.log(`Successfully updated data in bin ${binId}. New record:`, result.record);
+                console.log(`Successfully updated data in bin ${MAIN_BIN_ID}. New record:`, result.record);
                 return result.record;
             } catch (error) {
-                console.error(`Exception during updateBinData for bin ${binId}:`, error);
+                console.error(`Exception during updateBinData for bin ${MAIN_BIN_ID}:`, error);
                 // The more specific alert is already given above if response.ok is false
                 if (!error.message.includes("Failed to update data")) { // Avoid double alerts
-                     alert(`Network or parsing error saving data to JSONBin.io for bin ${binId}. See console for details.`);
+                     alert(`Network or parsing error saving data to JSONBin.io for bin ${MAIN_BIN_ID}. See console for details.`);
                 }
                 return null;
             }
@@ -981,13 +1018,14 @@
         // Loads all data (staff accounts and daily reports) from JSONBin.io.
         async function loadAllData() {
             console.log("Loading all data from JSONBin.io...");
-            const staffData = await fetchBinData(STAFF_BIN_ID);
-            staffAccounts = (staffData && staffData.accounts) || [];
-            console.log("Staff accounts loaded:", staffAccounts);
-
-            const reportsData = await fetchBinData(REPORTS_BIN_ID);
-            dailyReports = (reportsData && reportsData.reports) || [];
-            console.log("Daily reports loaded:", dailyReports);
+            const fetchedData = await fetchBinData();
+            if (fetchedData) {
+                mainBinData = fetchedData;
+            } else {
+                // If fetch failed or returned null, ensure mainBinData is still initialized
+                mainBinData = { accounts: [], reports: [] };
+            }
+            console.log("Current mainBinData:", mainBinData);
         }
 
         // Checks if the current time allows report submission (after 6 PM India time).
@@ -1116,8 +1154,8 @@
                 return;
             }
 
-            await loadAllData(); // Ensure latest accounts are loaded
-            if (staffAccounts.some(account => account.email === email)) {
+            await loadAllData(); // Ensure latest data from the single bin is loaded
+            if (mainBinData.accounts.some(account => account.email === email)) {
                 showMessage(messageElementId, "Account with this email already exists.", 'error');
                 return;
             }
@@ -1130,8 +1168,8 @@
                 registeredAt: new Date().toISOString()
             };
 
-            staffAccounts.push(newAccount);
-            const updatedBin = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
+            mainBinData.accounts.push(newAccount);
+            const updatedBin = await updateBinData(mainBinData); // Pass the entire mainBinData object
 
             if (updatedBin) {
                 showMessage(messageElementId, "Staff account created successfully! You can now log in.", 'success');
@@ -1164,8 +1202,8 @@
                 return;
             }
 
-            await loadAllData(); // Ensure latest accounts are loaded
-            const account = staffAccounts.find(acc => acc.email === email && acc.password === hashPassword(password));
+            await loadAllData(); // Ensure latest data from the single bin is loaded
+            const account = mainBinData.accounts.find(acc => acc.email === email && acc.password === hashPassword(password));
 
             if (account) {
                 currentUser = account;
@@ -1245,10 +1283,10 @@
             const today = new Date();
             const reportDate = today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
-            await loadAllData(); // Ensure latest reports are loaded
+            await loadAllData(); // Ensure latest data from the single bin is loaded
 
             // Check if a report for today already exists for this user
-            const existingReportIndex = dailyReports.findIndex(report =>
+            const existingReportIndex = mainBinData.reports.findIndex(report =>
                 report.staffEmail === currentUser.email &&
                 new Date(report.date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) === reportDate
             );
@@ -1268,8 +1306,8 @@
                 accounts: accountsContent
             };
 
-            dailyReports.push(newReport);
-            const updatedBin = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+            mainBinData.reports.push(newReport);
+            const updatedBin = await updateBinData(mainBinData); // Pass the entire mainBinData object
 
             if (updatedBin) {
                 alert("Daily report submitted successfully!");
@@ -1300,8 +1338,8 @@
                 return;
             }
 
-            await loadAllData(); // Ensure latest reports are loaded
-            const userReports = dailyReports
+            await loadAllData(); // Ensure latest data from the single bin is loaded
+            const userReports = mainBinData.reports
                 .filter(report => report.staffEmail === currentUser.email)
                 .sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by newest first
 
@@ -1343,10 +1381,10 @@
                 return;
             }
 
-            await loadAllData(); // Ensure latest reports are loaded
+            await loadAllData(); // Ensure latest data from the single bin is loaded
             const today = new Date();
             const reportDate = today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
-            const todayReport = dailyReports.find(report =>
+            const todayReport = mainBinData.reports.find(report =>
                 report.staffEmail === currentUser.email &&
                 new Date(report.date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) === reportDate
             );
@@ -1393,20 +1431,20 @@
             const today = new Date();
             const reportDate = today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
-            await loadAllData(); // Ensure latest reports are loaded
-            const existingReportIndex = dailyReports.findIndex(report =>
+            await loadAllData(); // Ensure latest data from the single bin is loaded
+            const existingReportIndex = mainBinData.reports.findIndex(report =>
                 report.staffEmail === currentUser.email &&
                 new Date(report.date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) === reportDate
             );
 
             if (existingReportIndex !== -1) {
-                dailyReports[existingReportIndex].marketing = marketingContent;
-                dailyReports[existingReportIndex].collection = collectionContent;
-                dailyReports[existingReportIndex].commission = commissionContent;
-                dailyReports[existingReportIndex].accounts = accountsContent;
-                dailyReports[existingReportIndex].date = new Date().toISOString(); // Update timestamp on edit
+                mainBinData.reports[existingReportIndex].marketing = marketingContent;
+                mainBinData.reports[existingReportIndex].collection = collectionContent;
+                mainBinData.reports[existingReportIndex].commission = commissionContent;
+                mainBinData.reports[existingReportIndex].accounts = accountsContent;
+                mainBinData.reports[existingReportIndex].date = new Date().toISOString(); // Update timestamp on edit
 
-                const updatedBin = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+                const updatedBin = await updateBinData(mainBinData); // Pass the entire mainBinData object
 
                 if (updatedBin) {
                     alert("Daily report updated successfully!");
@@ -1440,12 +1478,12 @@
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-            const initialReportCount = dailyReports.length;
-            dailyReports = dailyReports.filter(report => new Date(report.date) >= thirtyDaysAgo);
+            const initialReportCount = mainBinData.reports.length;
+            mainBinData.reports = mainBinData.reports.filter(report => new Date(report.date) >= thirtyDaysAgo);
 
-            if (dailyReports.length < initialReportCount) {
-                console.log(`Deleted ${initialReportCount - dailyReports.length} reports older than 30 days.`);
-                const updatedBin = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+            if (mainBinData.reports.length < initialReportCount) {
+                console.log(`Deleted ${initialReportCount - mainBinData.reports.length} reports older than 30 days.`);
+                const updatedBin = await updateBinData(mainBinData); // Pass the entire mainBinData object
                 if (updatedBin) {
                     console.log("Old reports successfully pruned from JSONBin.");
                 } else {
@@ -1470,7 +1508,7 @@
             staffPagination.innerHTML = '';
 
             const searchTerm = staffSearchInput.value.toLowerCase().trim();
-            const filteredAccounts = staffAccounts.filter(account =>
+            const filteredAccounts = mainBinData.accounts.filter(account =>
                 account.email.toLowerCase().includes(searchTerm) ||
                 (account.name && account.name.toLowerCase().includes(searchTerm))
             );
@@ -1564,7 +1602,7 @@
             reportsList.innerHTML = '';
             reportPagination.innerHTML = '';
 
-            const sortedReports = [...dailyReports].sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+            const sortedReports = [...mainBinData.reports].sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
 
             const totalPages = Math.ceil(sortedReports.length / REPORTS_PAGE_SIZE);
             const startIndex = (currentReportsPage - 1) * REPORTS_PAGE_SIZE;
@@ -1621,7 +1659,7 @@
             reportsSummary.innerHTML = '';
             reportPagination.innerHTML = '';
 
-            const sortedReports = [...dailyReports].sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+            const sortedReports = [...mainBinData.reports].sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
 
             const totalPages = Math.ceil(sortedReports.length / REPORTS_PAGE_SIZE);
             const startIndex = (currentReportsPage - 1) * REPORTS_PAGE_SIZE;
@@ -1697,7 +1735,7 @@
         // Shows the full report view modal for owner.
         function showViewReportModal(reportId) {
             console.log(`Showing full report modal for report ID: ${reportId}`);
-            const report = dailyReports.find(r => r.id === reportId);
+            const report = mainBinData.reports.find(r => r.id === reportId);
             const modal = document.getElementById('view-report-modal');
             const titleElement = document.getElementById('view-report-title');
             const bodyElement = document.getElementById('view-report-body');
@@ -1752,7 +1790,7 @@
         function showEditStaffModal(email) {
             console.log(`Showing edit staff modal for: ${email}`);
             staffToEditEmail = email;
-            const staff = staffAccounts.find(acc => acc.email === email);
+            const staff = mainBinData.accounts.find(acc => acc.email === email);
             const modal = document.getElementById('edit-staff-modal');
             const emailInput = document.getElementById('edit-staff-email');
 
@@ -1812,12 +1850,12 @@
                 return;
             }
 
-            await loadAllData(); // Ensure latest accounts are loaded
-            const staffIndex = staffAccounts.findIndex(acc => acc.email === staffToEditEmail);
+            await loadAllData(); // Ensure latest data from the single bin is loaded
+            const staffIndex = mainBinData.accounts.findIndex(acc => acc.email === staffToEditEmail);
 
             if (staffIndex !== -1) {
-                staffAccounts[staffIndex].password = hashPassword(newPassword);
-                const updatedBin = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
+                mainBinData.accounts[staffIndex].password = hashPassword(newPassword);
+                const updatedBin = await updateBinData(mainBinData); // Pass the entire mainBinData object
 
                 if (updatedBin) {
                     alert("Staff account updated successfully!");
@@ -1862,24 +1900,23 @@
                 return;
             }
 
-            await loadAllData(); // Ensure latest data
+            await loadAllData(); // Ensure latest data from the single bin is loaded
 
             // Delete staff account
-            const initialStaffCount = staffAccounts.length;
-            staffAccounts = staffAccounts.filter(acc => acc.email !== staffToEditEmail);
-            if (staffAccounts.length === initialStaffCount) {
+            const initialStaffCount = mainBinData.accounts.length;
+            mainBinData.accounts = mainBinData.accounts.filter(acc => acc.email !== staffToEditEmail);
+            if (mainBinData.accounts.length === initialStaffCount) {
                 alert("Staff account not found for deletion.");
                 return;
             }
 
             // Delete associated reports
-            const initialReportCount = dailyReports.length;
-            dailyReports = dailyReports.filter(report => report.staffEmail !== staffToEditEmail);
+            const initialReportCount = mainBinData.reports.length;
+            mainBinData.reports = mainBinData.reports.filter(report => report.staffEmail !== staffToEditEmail);
 
-            const updatedStaffBin = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
-            const updatedReportsBin = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+            const updatedBin = await updateBinData(mainBinData); // Update the single bin
 
-            if (updatedStaffBin && updatedReportsBin) {
+            if (updatedBin) {
                 alert(`Staff account ${staffToEditEmail} and all associated reports have been deleted.`);
                 staffToEditEmail = null;
                 loadStaffAccounts(); // Refresh staff list
@@ -1924,17 +1961,17 @@
                 return;
             }
 
-            await loadAllData(); // Ensure latest data
-            const initialReportCount = dailyReports.length;
-            dailyReports = dailyReports.filter(report => report.id !== reportToDeleteId);
+            await loadAllData(); // Ensure latest data from the single bin is loaded
+            const initialReportCount = mainBinData.reports.length;
+            mainBinData.reports = mainBinData.reports.filter(report => report.id !== reportToDeleteId);
 
-            if (dailyReports.length === initialReportCount) {
+            if (mainBinData.reports.length === initialReportCount) {
                 alert("Report not found for deletion.");
                 reportToDeleteId = null;
                 return;
             }
 
-            const updatedBin = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+            const updatedBin = await updateBinData(mainBinData); // Update the single bin
 
             if (updatedBin) {
                 alert("Report deleted successfully!");
@@ -1950,3 +1987,4 @@
     </script>
 </body>
 </html>
+```
