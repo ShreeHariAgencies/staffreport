@@ -847,11 +847,12 @@
     </footer>
 
     <script>
-        // *** IMPORTANT: YOUR JSONBin.io KEYS AND IDs ARE SET HERE ***
-        const JSONBIN_SECRET_KEY = '$2a$10$vlNz95xI2evMW5E0BuhuoOF/yLfLgu/ZAN0c.ats6IvyeJKseTMgK'; // Your Secret Key
+        // IMPORTANT: YOUR JSONBin.io KEYS AND IDs ARE SET HERE
+        // These values MUST be correct for the application to work.
+        const JSONBIN_SECRET_KEY = '$2a$10$vlNz95xI2evMW5E0BuhuoOF/yLfLgu/ZAN0c.ats6IvyeJKseTMgK'; // Your JSONBin.io Master Key
         const STAFF_BIN_ID = '687a8a004aa8c42c4e87388b'; // Your staff accounts bin ID
         const REPORTS_BIN_ID = '687a894411538d600f2aeba6'; // Your daily reports bin ID
-        // **************************************************************************
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         const JSONBIN_API_URL = 'https://api.jsonbin.io/v3/b/';
 
@@ -860,9 +861,9 @@
         let staffAccounts = []; // Will be loaded from JSONBin
         let dailyReports = [];  // Will be loaded from JSONBin
         
-        // Owner credentials (for demonstration purposes only) - These are NOT secure for real apps!
+        // Owner credentials (for demonstration purposes only - NEVER use hardcoded passwords in a production app!)
         const OWNER_EMAIL = "owner@shreehari.com";
-        const OWNER_PASSWORD = "adminpassword"; // In a real app, use hashed passwords and a proper backend!
+        const OWNER_PASSWORD = "adminpassword"; 
 
         // Pagination settings
         const STAFF_PAGE_SIZE = 5;
@@ -890,6 +891,7 @@
             console.log("Initialization complete. Showing login screen.");
         });
 
+        // Fetches data from a specified JSONBin.io bin.
         async function fetchBinData(binId) {
             console.log(`Attempting to fetch data from bin: ${binId}`);
             try {
@@ -902,22 +904,38 @@
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error(`Error fetching data from bin ${binId}. Status: ${response.status} ${response.statusText}. Response Body:`, errorText);
-                    throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}. Check console for details.`);
+                    // Provide a more user-friendly alert for common issues
+                    let alertMsg = `Error loading data from JSONBin.io for bin ${binId}.`;
+                    if (response.status === 401 || response.status === 403) {
+                        alertMsg += " Check your Secret Key's validity and permissions.";
+                    } else if (response.status === 404) {
+                        alertMsg += " Bin not found. Ensure the Bin ID is correct.";
+                    } else {
+                        alertMsg += " Please check your browser's console (F12) for detailed errors.";
+                    }
+                    alert(alertMsg);
+                    throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}.`);
                 }
                 const data = await response.json();
                 if (!data || !data.record) {
                     console.error(`Unexpected data structure from bin ${binId}:`, data);
+                    alert(`Received invalid data structure from JSONBin.io for bin ${binId}. Ensure the bin's content is a JSON object with a 'record' property, e.g., {"accounts": []} or {"reports": []}.`);
                     throw new Error('Invalid data structure received from JSONBin.io. Expected a "record" property.');
                 }
-                console.log(`Successfully fetched data from bin ${binId}.`);
+                console.log(`Successfully fetched data from bin ${binId}. Data:`, data.record);
                 return data.record;
             } catch (error) {
                 console.error(`Exception during fetchBinData for bin ${binId}:`, error);
-                alert(`Error loading data from JSONBin.io for bin ${binId}. Please check your browser's console (F12) for detailed errors. Ensure your bin exists, its initial content is correct (e.g., {"accounts": []}), and your Secret Key is valid and has read permissions.`);
+                // The more specific alert is already given above if response.ok is false
+                // This catch is for network errors or errors thrown by data parsing
+                if (!error.message.includes("Failed to fetch data")) { // Avoid double alerts
+                    alert(`Network or parsing error loading data from JSONBin.io for bin ${binId}. See console for details.`);
+                }
                 return null;
             }
         }
 
+        // Updates data in a specified JSONBin.io bin.
         async function updateBinData(binId, data) {
             console.log(`Attempting to update data in bin: ${binId} with data:`, data);
             try {
@@ -926,29 +944,41 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Master-Key': JSONBIN_SECRET_KEY,
-                        'X-Bin-Meta': 'false'
+                        'X-Bin-Meta': 'false' // Get only data, not metadata
                     },
                     body: JSON.stringify(data)
                 });
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error(`Error updating data in bin ${binId}. Status: ${response.status} ${response.statusText}. Response Body:`, errorText);
-                    throw new Error(`Failed to update data: ${response.status} ${response.statusText}. Check console for details.`);
+                    let alertMsg = `Error saving data to JSONBin.io for bin ${binId}.`;
+                    if (response.status === 401 || response.status === 403) {
+                        alertMsg += " Check your Secret Key's validity and write permissions.";
+                    } else if (response.status === 400) {
+                         alertMsg += " Bad request, possibly malformed JSON body.";
+                    }
+                    alert(alertMsg + " Please check your browser's console (F12) for detailed errors.");
+                    throw new Error(`Failed to update data: ${response.status} ${response.statusText}.`);
                 }
                 const result = await response.json();
                 if (!result || !result.record) {
                      console.error(`Unexpected data structure after updating bin ${binId}:`, result);
+                     alert(`Received invalid response structure after updating JSONBin.io for bin ${binId}.`);
                      throw new Error('Invalid response structure after updating JSONBin.io. Expected a "record" property.');
                 }
-                console.log(`Successfully updated data in bin ${binId}.`);
+                console.log(`Successfully updated data in bin ${binId}. New record:`, result.record);
                 return result.record;
             } catch (error) {
                 console.error(`Exception during updateBinData for bin ${binId}:`, error);
-                alert(`Error saving data to JSONBin.io for bin ${binId}. Please check your browser's console (F12) for detailed errors. Ensure your Secret Key is valid and has write permissions.`);
+                // The more specific alert is already given above if response.ok is false
+                if (!error.message.includes("Failed to update data")) { // Avoid double alerts
+                     alert(`Network or parsing error saving data to JSONBin.io for bin ${binId}. See console for details.`);
+                }
                 return null;
             }
         }
 
+        // Loads all data (staff accounts and daily reports) from JSONBin.io.
         async function loadAllData() {
             console.log("Loading all data from JSONBin.io...");
             const staffData = await fetchBinData(STAFF_BIN_ID);
@@ -960,15 +990,17 @@
             console.log("Daily reports loaded:", dailyReports);
         }
 
+        // Checks if the current time allows report submission (after 6 PM India time).
         function checkSubmissionTime() {
             const now = new Date();
+            // Get current time in Mumbai (IST)
             const mumbaiTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
             const hour = mumbaiTime.getHours();
             const timeNotice = document.getElementById('time-notice');
-            const submitButton = document.querySelector('#staff-dashboard .report-section .btn');
+            const submitButton = document.querySelector('#staff-dashboard .report-section .btn'); // Specific selector for submit button
 
             if (timeNotice && submitButton) {
-                if (hour >= 18) { // 6 PM (18:00)
+                if (hour >= 18) { // 6 PM (18:00) IST
                     timeNotice.classList.add('hidden');
                     submitButton.removeAttribute('disabled');
                 } else {
@@ -980,839 +1012,940 @@
             }
         }
 
+        // Shows a specific form/screen and hides others.
         function showForm(formId) {
             console.log(`Showing form: ${formId}`);
-            // Safely hide all potential screens
+            // Safely hide all potential screens by checking if they exist
             const screens = ['login-screen', 'create-account', 'staff-login', 'owner-login', 'staff-dashboard', 'owner-dashboard'];
             screens.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
                     element.classList.add('hidden');
                 } else {
-                    console.warn(`Element with ID '${id}' not found when trying to hide forms.`);
+                    // This warning indicates an ID mismatch in HTML or JavaScript
+                    console.warn(`Element with ID '${id}' not found when trying to hide screens.`);
                 }
             });
 
-            const targetForm = document.getElementById(formId);
-            if (targetForm) {
-                targetForm.classList.remove('hidden');
+            // Show the requested form/screen
+            const targetElement = document.getElementById(formId);
+            if (targetElement) {
+                targetElement.classList.remove('hidden');
             } else {
-                console.error(`Target form with ID '${formId}' not found.`);
+                console.error(`Attempted to show non-existent form: ${formId}`);
+                alert(`Error: Could not find element for form ${formId}. Check console for details.`);
             }
-            clearMessages(); // Clear any previous messages
+
+            // Clear messages and input fields when switching forms
+            const messageElements = document.querySelectorAll('.status-message');
+            messageElements.forEach(el => {
+                el.classList.add('hidden');
+                el.textContent = '';
+            });
+
+            // Clear specific input fields
+            if (formId === 'create-account') {
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+            } else if (formId === 'staff-login') {
+                document.getElementById('staff-email').value = '';
+                document.getElementById('staff-password').value = '';
+            } else if (formId === 'owner-login') {
+                document.getElementById('owner-email').value = '';
+                document.getElementById('owner-password').value = '';
+            }
         }
 
-        async function showLoginScreen() {
-            console.log("Showing login screen and resetting state.");
-            showForm('login-screen'); // This handles hiding all others and showing login-screen
+        // Displays the main login screen.
+        function showLoginScreen() {
+            console.log("Showing login screen and logging out current user.");
             currentUser = null;
             ownerLoggedIn = false;
-            clearMessages();
-            // Clear input fields safely
-            const inputsToClear = ['email', 'password', 'staff-email', 'staff-password', 'owner-email', 'owner-password'];
-            inputsToClear.forEach(id => {
-                const input = document.getElementById(id);
-                if (input) {
-                    input.value = '';
-                } else {
-                    console.warn(`Input element with ID '${id}' not found when clearing fields.`);
-                }
-            });
-
-            await loadAllData(); // Ensure latest data is loaded when returning to login
+            showForm('login-screen');
         }
 
-        function clearMessages() {
-            const messages = document.querySelectorAll('.status-message');
-            messages.forEach(msg => {
-                msg.classList.add('hidden');
-                msg.textContent = '';
-                msg.classList.remove('success', 'error', 'warning');
-            });
-        }
-
+        // Displays a status message (success, error, warning).
         function showMessage(elementId, message, type) {
             const element = document.getElementById(elementId);
             if (element) {
                 element.textContent = message;
-                element.classList.remove('hidden', 'success', 'error', 'warning');
-                element.classList.add(type);
+                element.className = `status-message ${type}`; // Overwrite classes to set type
+                element.classList.remove('hidden');
+                console.log(`Message displayed for ${elementId}: ${message} (Type: ${type})`);
             } else {
-                console.warn(`Message element with ID '${elementId}' not found.`);
+                console.error(`Attempted to show message for non-existent element: ${elementId}`);
             }
         }
 
-        // --- Account Management (using JSONBin.io) ---
+        // Simple password hashing (for demonstration; not secure for production!)
+        function hashPassword(password) {
+            return btoa(password); // Base64 encoding
+        }
+
+        // Staff account creation.
         async function createAccount() {
             console.log("Attempting to create account...");
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
-            const accountMessage = document.getElementById('account-message');
+            const messageElementId = 'account-message';
 
-            if (!emailInput || !passwordInput || !accountMessage) {
-                console.error("Missing DOM elements for create account form.");
-                alert("An internal error occurred. Please refresh the page.");
+            if (!emailInput || !passwordInput) {
+                console.error("Email or password input elements not found for createAccount.");
+                showMessage(messageElementId, "Internal error: Missing form fields.", 'error');
                 return;
             }
 
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
-            
-
-            clearMessages();
 
             if (!email || !password) {
-                showMessage('account-message', 'Email and password cannot be empty.', 'error');
+                showMessage(messageElementId, "Please fill in all fields.", 'error');
                 return;
             }
 
+            // Simple email validation
+            if (!/\S+@\S+\.\S+/.test(email)) {
+                showMessage(messageElementId, "Please enter a valid email address.", 'error');
+                return;
+            }
+
+            // Password policy: min 6 chars, 1 digit, 1 special char
             const passwordRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{6,}$/;
             if (!passwordRegex.test(password)) {
-                showMessage('account-message', 'Password must contain at least 6 characters, one digit, and one special character.', 'error');
+                showMessage(messageElementId, "Password must be at least 6 characters long and contain at least one digit and one special character.", 'error');
                 return;
             }
 
-            // Fetch latest staff accounts to prevent race conditions (important for multi-user)
-            await loadAllData(); 
-            if (staffAccounts.find(account => account.email === email)) {
-                showMessage('account-message', 'Account with this email already exists.', 'error');
+            await loadAllData(); // Ensure latest accounts are loaded
+            if (staffAccounts.some(account => account.email === email)) {
+                showMessage(messageElementId, "Account with this email already exists.", 'error');
                 return;
             }
 
-            staffAccounts.push({ email, password: hashPassword(password), registrationDate: new Date().toISOString() });
-            const updated = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
-            
-            if (updated) {
-                showMessage('account-message', 'Staff account created successfully! You can now login.', 'success');
+            const hashedPassword = hashPassword(password);
+            const newAccount = {
+                id: Date.now(), // Unique ID for the account
+                email: email,
+                password: hashedPassword,
+                registeredAt: new Date().toISOString()
+            };
+
+            staffAccounts.push(newAccount);
+            const updatedBin = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
+
+            if (updatedBin) {
+                showMessage(messageElementId, "Staff account created successfully! You can now log in.", 'success');
                 emailInput.value = '';
                 passwordInput.value = '';
-                loadStaffAccounts(); // Refresh staff list for owner
             } else {
-                showMessage('account-message', 'Failed to create account. Please try again. Check console for API errors.', 'error');
-                // Revert local staffAccounts if update failed
-                staffAccounts.pop();
+                // Error already logged by updateBinData
+                showMessage(messageElementId, "Failed to create account. Please try again.", 'error');
             }
         }
 
+        // Staff login authentication.
         async function staffLogin() {
             console.log("Attempting staff login...");
             const emailInput = document.getElementById('staff-email');
             const passwordInput = document.getElementById('staff-password');
-            const loginMessage = document.getElementById('staff-login-message');
+            const messageElementId = 'staff-login-message';
 
-            if (!emailInput || !passwordInput || !loginMessage) {
-                console.error("Missing DOM elements for staff login form.");
-                alert("An internal error occurred. Please refresh the page.");
+            if (!emailInput || !passwordInput) {
+                console.error("Email or password input elements not found for staffLogin.");
+                showMessage(messageElementId, "Internal error: Missing form fields.", 'error');
                 return;
             }
 
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
 
-            clearMessages();
-            await loadAllData(); // Fetch latest staff accounts
+            if (!email || !password) {
+                showMessage(messageElementId, "Please enter both email and password.", 'error');
+                return;
+            }
 
-            const staff = staffAccounts.find(account => account.email === email && account.password === hashPassword(password));
+            await loadAllData(); // Ensure latest accounts are loaded
+            const account = staffAccounts.find(acc => acc.email === email && acc.password === hashPassword(password));
 
-            if (staff) {
-                currentUser = staff;
+            if (account) {
+                currentUser = account;
                 ownerLoggedIn = false;
-                showMessage('staff-login-message', 'Login successful!', 'success');
-                setTimeout(() => {
-                    showForm('staff-dashboard');
-                    loadStaffReports(currentUser.email);
-                    clearReportForm();
-                }, 500);
+                showMessage(messageElementId, "Staff login successful!", 'success');
+                console.log("Staff logged in:", currentUser.email);
+                showStaffDashboard();
             } else {
-                showMessage('staff-login-message', 'Invalid email or password.', 'error');
+                showMessage(messageElementId, "Invalid email or password.", 'error');
+                console.log("Staff login failed for:", email);
             }
         }
 
+        // Owner login authentication.
         async function ownerLogin() {
             console.log("Attempting owner login...");
             const emailInput = document.getElementById('owner-email');
             const passwordInput = document.getElementById('owner-password');
-            const loginMessage = document.getElementById('owner-login-message');
+            const messageElementId = 'owner-login-message';
 
-            if (!emailInput || !passwordInput || !loginMessage) {
-                console.error("Missing DOM elements for owner login form.");
-                alert("An internal error occurred. Please refresh the page.");
+            if (!emailInput || !passwordInput) {
+                console.error("Email or password input elements not found for ownerLogin.");
+                showMessage(messageElementId, "Internal error: Missing form fields.", 'error');
                 return;
             }
 
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
 
-            clearMessages();
-            await loadAllData(); // Fetch latest reports and accounts for owner view
+            if (!email || !password) {
+                showMessage(messageElementId, "Please enter both email and password.", 'error');
+                return;
+            }
 
             if (email === OWNER_EMAIL && password === OWNER_PASSWORD) {
+                currentUser = { email: OWNER_EMAIL, isOwner: true };
                 ownerLoggedIn = true;
-                currentUser = null;
-                showMessage('owner-login-message', 'Owner login successful!', 'success');
-                setTimeout(() => {
-                    showForm('owner-dashboard');
-                    loadStaffAccounts();
-                    loadAllReports();
-                }, 500);
+                showMessage(messageElementId, "Owner login successful!", 'success');
+                console.log("Owner logged in.");
+                await loadAllData(); // Load all data for owner dashboard
+                showOwnerDashboard();
             } else {
-                showMessage('owner-login-message', 'Invalid owner email or password.', 'error');
+                showMessage(messageElementId, "Invalid owner email or password.", 'error');
+                console.log("Owner login failed.");
             }
         }
 
-        // Simple password hashing (for client-side demo, NOT secure for real apps)
-        function hashPassword(password) {
-            return btoa(password); // Base64 encode for simple "hashing"
+        // Shows staff dashboard and loads past reports.
+        async function showStaffDashboard() {
+            console.log("Showing staff dashboard for:", currentUser ? currentUser.email : "Unknown user");
+            showForm('staff-dashboard');
+            loadPastReports();
+            checkSubmissionTime(); // Re-check time on dashboard load
         }
 
-        // --- Staff Dashboard Functions ---
-        function clearReportForm() {
-            const marketing = document.getElementById('marketing-content');
-            const collection = document.getElementById('collection-content');
-            const commission = document.getElementById('commission-content');
-            const accounts = document.getElementById('accounts-content');
-            const editContainer = document.getElementById('edit-report-container');
-            const editMarketing = document.getElementById('edit-marketing-content');
-            const editCollection = document.getElementById('edit-collection-content');
-            const editCommission = document.getElementById('edit-commission-content');
-            const editAccounts = document.getElementById('edit-accounts-content');
-
-            if (marketing) marketing.value = '';
-            if (collection) collection.value = '';
-            if (commission) commission.value = '';
-            if (accounts) accounts.value = '';
-            if (editContainer) editContainer.classList.add('hidden');
-            if (editMarketing) editMarketing.value = '';
-            if (editCollection) editCollection.value = '';
-            if (editCommission) editCommission.value = '';
-            if (editAccounts) editAccounts.value = '';
-        }
-
-        function showConfirmModal() {
-            const modal = document.getElementById('confirm-modal');
-            if (modal) modal.style.display = 'flex';
-            else console.warn("Confirm modal not found.");
-        }
-
-        function hideConfirmModal() {
-            const modal = document.getElementById('confirm-modal');
-            if (modal) modal.style.display = 'none';
-            else console.warn("Confirm modal not found.");
-        }
-
+        // Submits a daily report for the logged-in staff.
         async function submitReport() {
             console.log("Attempting to submit report...");
-            hideConfirmModal();
+            hideConfirmModal(); // Hide the confirmation modal
 
             if (!currentUser) {
-                alert('Error: No staff member logged in.');
+                alert("You must be logged in to submit a report.");
                 showLoginScreen();
                 return;
             }
 
-            const marketingInput = document.getElementById('marketing-content');
-            const collectionInput = document.getElementById('collection-content');
-            const commissionInput = document.getElementById('commission-content');
-            const accountsInput = document.getElementById('accounts-content');
+            const marketingContent = document.getElementById('marketing-content').value.trim();
+            const collectionContent = document.getElementById('collection-content').value.trim();
+            const commissionContent = document.getElementById('commission-content').value.trim();
+            const accountsContent = document.getElementById('accounts-content').value.trim();
 
-            if (!marketingInput || !collectionInput || !commissionInput || !accountsInput) {
-                console.error("Missing DOM elements for report submission.");
-                alert("An internal error occurred. Please refresh the page.");
-                return;
-            }
-
-            const marketing = marketingInput.value.trim();
-            const collection = collectionInput.value.trim();
-            const commission = commissionInput.value.trim();
-            const accounts = accountsInput.value.trim();
-
-            if (!marketing && !collection && !commission && !accounts) {
-                alert('At least one section must be filled to submit a report.');
+            if (!marketingContent && !collectionContent && !commissionContent && !accountsContent) {
+                alert("Please fill at least one section of the report.");
                 return;
             }
 
             const today = new Date();
-            const reportDate = today.toISOString().split('T')[0];
+            const reportDate = today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
-            await loadAllData(); // Fetch latest reports to avoid overwriting
+            await loadAllData(); // Ensure latest reports are loaded
 
-            const existingReportIndex = dailyReports.findIndex(r => r.email === currentUser.email && r.date === reportDate);
+            // Check if a report for today already exists for this user
+            const existingReportIndex = dailyReports.findIndex(report =>
+                report.staffEmail === currentUser.email &&
+                new Date(report.date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) === reportDate
+            );
 
             if (existingReportIndex !== -1) {
-                alert('You have already submitted a report for today. Please use the "Edit Today\'s Report" option to make changes.');
+                alert("You have already submitted a report for today. Please use the 'Edit Today's Report' option if you wish to modify it.");
                 return;
             }
 
             const newReport = {
                 id: Date.now(), // Unique ID for the report
-                email: currentUser.email,
-                date: reportDate,
-                marketing,
-                collection,
-                commission,
-                accounts,
-                timestamp: today.toISOString()
+                staffEmail: currentUser.email,
+                date: new Date().toISOString(), // Store as ISO string for consistent parsing
+                marketing: marketingContent,
+                collection: collectionContent,
+                commission: commissionContent,
+                accounts: accountsContent
             };
 
             dailyReports.push(newReport);
-            const updated = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
-            
-            if (updated) {
-                alert('Daily report submitted successfully!');
-                clearReportForm();
-                loadStaffReports(currentUser.email); // Reload past reports for staff
-                loadAllReports(); // Reload all reports for owner
+            const updatedBin = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+
+            if (updatedBin) {
+                alert("Daily report submitted successfully!");
+                // Clear the form fields
+                document.getElementById('marketing-content').value = '';
+                document.getElementById('collection-content').value = '';
+                document.getElementById('commission-content').value = '';
+                document.getElementById('accounts-content').value = '';
+                loadPastReports(); // Reload past reports to show the new one
             } else {
-                alert('Failed to submit report. Please try again. Check console for API errors.');
-                dailyReports.pop(); // Revert local change if update failed
+                // Error already logged by updateBinData
+                alert("Failed to submit report. Please try again.");
             }
         }
 
-        async function loadStaffReports(email) {
-            console.log(`Loading reports for staff: ${email}`);
-            await loadAllData(); // Ensure latest reports are fetched
+        // Loads and displays past reports for the logged-in staff.
+        async function loadPastReports() {
+            console.log("Loading past reports for current user:", currentUser ? currentUser.email : "Unknown");
             const pastReportsList = document.getElementById('past-reports-list');
             if (!pastReportsList) {
-                console.warn("Element with ID 'past-reports-list' not found.");
+                console.error("Element 'past-reports-list' not found.");
                 return;
             }
-            pastReportsList.innerHTML = '';
+            pastReportsList.innerHTML = ''; // Clear previous reports
 
-            const staffReports = dailyReports
-                .filter(report => report.email === email)
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            if (staffReports.length === 0) {
-                pastReportsList.innerHTML = '<p style="text-align: center; color: #666;">No past reports found.</p>';
+            if (!currentUser) {
+                pastReportsList.innerHTML = '<p>Please log in to view your past reports.</p>';
                 return;
             }
 
-            staffReports.forEach(report => {
-                const reportItem = document.createElement('div');
-                reportItem.classList.add('report-item');
-                reportItem.innerHTML = `
-                    <div class="report-date">Date: ${new Date(report.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</div>
+            await loadAllData(); // Ensure latest reports are loaded
+            const userReports = dailyReports
+                .filter(report => report.staffEmail === currentUser.email)
+                .sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by newest first
+
+            if (userReports.length === 0) {
+                pastReportsList.innerHTML = '<p>No past reports found.</p>';
+                return;
+            }
+
+            userReports.forEach(report => {
+                const reportDate = new Date(report.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                const reportElement = document.createElement('div');
+                reportElement.className = 'report-item';
+                reportElement.innerHTML = `
+                    <div class="report-date">Date: ${reportDate}</div>
                     <div class="report-content">
-                        ${report.marketing ? `<strong>Marketing:</strong> ${report.marketing}<br>` : ''}
-                        ${report.collection ? `<strong>Collection:</strong> ${report.collection}<br>` : ''}
-                        ${report.commission ? `<strong>Commission Received:</strong> ${report.commission}<br>` : ''}
-                        ${report.accounts ? `<strong>Accounts:</strong> ${report.accounts}<br>` : ''}
+                        ${report.marketing ? `<strong>Marketing:</strong><br>${report.marketing}<br><br>` : ''}
+                        ${report.collection ? `<strong>Collection:</strong><br>${report.collection}<br><br>` : ''}
+                        ${report.commission ? `<strong>Commission Received:</strong><br>${report.commission}<br><br>` : ''}
+                        ${report.accounts ? `<strong>Accounts:</strong><br>${report.accounts}` : ''}
                     </div>
                 `;
-                pastReportsList.appendChild(reportItem);
+                pastReportsList.appendChild(reportElement);
             });
+            console.log("Past reports loaded successfully.");
         }
 
+        // Prepares the form to edit today's report.
         async function editReport() {
-            console.log("Attempting to edit report...");
+            console.log("Attempting to edit today's report...");
+            const editContainer = document.getElementById('edit-report-container');
+            if (!editContainer) {
+                console.error("Element 'edit-report-container' not found.");
+                return;
+            }
+
             if (!currentUser) {
-                alert('Error: No staff member logged in.');
+                alert("Please log in to edit a report.");
                 showLoginScreen();
                 return;
             }
 
+            await loadAllData(); // Ensure latest reports are loaded
             const today = new Date();
-            const reportDate = today.toISOString().split('T')[0];
-            await loadAllData(); // Fetch latest reports
-            const existingReport = dailyReports.find(r => r.email === currentUser.email && r.date === reportDate);
-            const editContainer = document.getElementById('edit-report-container');
+            const reportDate = today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            const todayReport = dailyReports.find(report =>
+                report.staffEmail === currentUser.email &&
+                new Date(report.date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) === reportDate
+            );
 
+            if (todayReport) {
+                document.getElementById('edit-marketing-content').value = todayReport.marketing || '';
+                document.getElementById('edit-collection-content').value = todayReport.collection || '';
+                document.getElementById('edit-commission-content').value = todayReport.commission || '';
+                document.getElementById('edit-accounts-content').value = todayReport.accounts || '';
+                editContainer.classList.remove('hidden');
+                console.log("Edit report form populated with today's report.");
+            } else {
+                alert("No report found for today. Please submit a new report first.");
+                editContainer.classList.add('hidden');
+                console.log("No report found for today to edit.");
+            }
+        }
+
+        // Updates today's report.
+        async function updateReport() {
+            console.log("Attempting to update report...");
+            const editContainer = document.getElementById('edit-report-container');
             if (!editContainer) {
-                console.error("Edit report container element not found.");
-                alert("An internal error occurred. Please refresh the page.");
+                console.error("Element 'edit-report-container' not found for updateReport.");
                 return;
             }
 
-            if (existingReport) {
-                editContainer.classList.remove('hidden');
-                document.getElementById('edit-marketing-content').value = existingReport.marketing || '';
-                document.getElementById('edit-collection-content').value = existingReport.collection || '';
-                document.getElementById('edit-commission-content').value = existingReport.commission || '';
-                document.getElementById('edit-accounts-content').value = existingReport.accounts || '';
+            if (!currentUser) {
+                alert("You must be logged in to update a report.");
+                showLoginScreen();
+                return;
+            }
+
+            const marketingContent = document.getElementById('edit-marketing-content').value.trim();
+            const collectionContent = document.getElementById('edit-collection-content').value.trim();
+            const commissionContent = document.getElementById('edit-commission-content').value.trim();
+            const accountsContent = document.getElementById('edit-accounts-content').value.trim();
+
+            if (!marketingContent && !collectionContent && !commissionContent && !accountsContent) {
+                alert("Please fill at least one section of the report.");
+                return;
+            }
+
+            const today = new Date();
+            const reportDate = today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+            await loadAllData(); // Ensure latest reports are loaded
+            const existingReportIndex = dailyReports.findIndex(report =>
+                report.staffEmail === currentUser.email &&
+                new Date(report.date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) === reportDate
+            );
+
+            if (existingReportIndex !== -1) {
+                dailyReports[existingReportIndex].marketing = marketingContent;
+                dailyReports[existingReportIndex].collection = collectionContent;
+                dailyReports[existingReportIndex].commission = commissionContent;
+                dailyReports[existingReportIndex].accounts = accountsContent;
+                dailyReports[existingReportIndex].date = new Date().toISOString(); // Update timestamp on edit
+
+                const updatedBin = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+
+                if (updatedBin) {
+                    alert("Daily report updated successfully!");
+                    editContainer.classList.add('hidden'); // Hide the edit form
+                    loadPastReports(); // Reload past reports to show the updated one
+                } else {
+                    // Error already logged by updateBinData
+                    alert("Failed to update report. Please try again.");
+                }
             } else {
-                alert('No report found for today. Please submit a new report first.');
+                alert("No report found for today to update. Please submit a new report.");
                 editContainer.classList.add('hidden');
             }
         }
 
-        async function updateReport() {
-            console.log("Attempting to update report...");
-            if (!currentUser) {
-                alert('Error: No staff member logged in.');
-                showLoginScreen();
-                return;
-            }
+        // Shows owner dashboard and loads all staff accounts and reports.
+        async function showOwnerDashboard() {
+            console.log("Showing owner dashboard.");
+            showForm('owner-dashboard');
+            currentStaffPage = 1; // Reset pagination
+            currentReportsPage = 1;
+            await loadAllData(); // Ensure all data is fresh
+            pruneOldReports(); // Clean up old reports on owner login
+            loadStaffAccounts(); // Load staff accounts list
+            toggleReportView('list'); // Default to list view
+        }
 
-            const today = new Date();
-            const reportDate = today.toISOString().split('T')[0];
-            await loadAllData(); // Fetch latest reports to avoid overwriting
-            const existingReportIndex = dailyReports.findIndex(r => r.email === currentUser.email && r.date === reportDate);
+        // Prunes reports older than 30 days.
+        async function pruneOldReports() {
+            console.log("Pruning old reports...");
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-            if (existingReportIndex === -1) {
-                alert('No report found for today to update.');
-                return;
-            }
+            const initialReportCount = dailyReports.length;
+            dailyReports = dailyReports.filter(report => new Date(report.date) >= thirtyDaysAgo);
 
-            const marketingInput = document.getElementById('edit-marketing-content');
-            const collectionInput = document.getElementById('edit-collection-content');
-            const commissionInput = document.getElementById('edit-commission-content');
-            const accountsInput = document.getElementById('edit-accounts-content');
-
-            if (!marketingInput || !collectionInput || !commissionInput || !accountsInput) {
-                console.error("Missing DOM elements for report update.");
-                alert("An internal error occurred. Please refresh the page.");
-                return;
-            }
-
-            const marketing = marketingInput.value.trim();
-            const collection = collectionInput.value.trim();
-            const commission = commissionInput.value.trim();
-            const accounts = accountsInput.value.trim();
-
-            if (!marketing && !collection && !commission && !accounts) {
-                alert('At least one section must be filled to update the report.');
-                return;
-            }
-
-            dailyReports[existingReportIndex].marketing = marketing;
-            dailyReports[existingReportIndex].collection = collection;
-            dailyReports[existingReportIndex].commission = commission;
-            dailyReports[existingReportIndex].accounts = accounts;
-            dailyReports[existingReportIndex].timestamp = new Date().toISOString();
-
-            const updated = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
-            if (updated) {
-                alert('Daily report updated successfully!');
-                const editContainer = document.getElementById('edit-report-container');
-                if (editContainer) editContainer.classList.add('hidden');
-                loadStaffReports(currentUser.email);
-                loadAllReports();
+            if (dailyReports.length < initialReportCount) {
+                console.log(`Deleted ${initialReportCount - dailyReports.length} reports older than 30 days.`);
+                const updatedBin = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+                if (updatedBin) {
+                    console.log("Old reports successfully pruned from JSONBin.");
+                } else {
+                    console.error("Failed to prune old reports from JSONBin.");
+                }
             } else {
-                alert('Failed to update report. Please try again. Check console for API errors.');
-                // Handle reversion if update fails
+                console.log("No reports older than 30 days found for pruning.");
             }
         }
 
-        // --- Owner Dashboard Functions ---
-
-        async function loadStaffAccounts(page = 1) {
-            console.log(`Loading staff accounts, page: ${page}`);
-            currentStaffPage = page;
-            await loadAllData(); // Fetch latest staff accounts
-            const staffListDiv = document.getElementById('staff-list');
-            const staffPaginationDiv = document.getElementById('staff-pagination');
-
-            if (!staffListDiv || !staffPaginationDiv) {
-                console.error("Missing DOM elements for staff accounts list or pagination.");
+        // Loads and displays staff accounts for the owner dashboard with pagination and search.
+        function loadStaffAccounts() {
+            console.log(`Loading staff accounts (page ${currentStaffPage})...`);
+            const staffList = document.getElementById('staff-list');
+            const staffPagination = document.getElementById('staff-pagination');
+            const staffSearchInput = document.getElementById('staff-search');
+            if (!staffList || !staffPagination || !staffSearchInput) {
+                console.error("One or more staff dashboard elements not found.");
                 return;
             }
+            staffList.innerHTML = '';
+            staffPagination.innerHTML = '';
 
-            staffListDiv.innerHTML = '';
-            staffPaginationDiv.innerHTML = '';
-
-            const staffSearchInput = document.getElementById('staff-search');
-            const searchTerm = staffSearchInput ? staffSearchInput.value.toLowerCase() : '';
-            
-            const filteredStaff = staffAccounts.filter(staff =>
-                staff.email.toLowerCase().includes(searchTerm) ||
-                (staff.name && staff.name.toLowerCase().includes(searchTerm))
+            const searchTerm = staffSearchInput.value.toLowerCase().trim();
+            const filteredAccounts = staffAccounts.filter(account =>
+                account.email.toLowerCase().includes(searchTerm) ||
+                (account.name && account.name.toLowerCase().includes(searchTerm))
             );
 
+            const totalPages = Math.ceil(filteredAccounts.length / STAFF_PAGE_SIZE);
             const startIndex = (currentStaffPage - 1) * STAFF_PAGE_SIZE;
             const endIndex = startIndex + STAFF_PAGE_SIZE;
-            const paginatedStaff = filteredStaff.slice(startIndex, endIndex);
+            const accountsToDisplay = filteredAccounts.slice(startIndex, endIndex);
 
-            if (paginatedStaff.length === 0) {
-                staffListDiv.innerHTML = '<p style="text-align: center; color: #666;">No staff accounts found.</p>';
-                return;
+            if (accountsToDisplay.length === 0) {
+                staffList.innerHTML = '<p>No staff accounts found.</p>';
+            } else {
+                accountsToDisplay.forEach(account => {
+                    const staffCard = document.createElement('div');
+                    staffCard.className = 'staff-card';
+                    const initial = account.email.charAt(0).toUpperCase();
+                    const registeredDate = new Date(account.registeredAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    staffCard.innerHTML = `
+                        <div class="staff-avatar">${initial}</div>
+                        <div class="staff-info">
+                            <div class="staff-name">${account.email}</div>
+                            <div class="staff-email">${account.email}</div>
+                            <div class="staff-registration-date">Registered: ${registeredDate}</div>
+                        </div>
+                        <div class="staff-actions">
+                            <button class="btn btn-sm" onclick="showEditStaffModal('${account.email}')">Edit</button>
+                            <button class="btn btn-sm back-btn" style="background-color: #dc3545;" onclick="deleteStaffAccountConfirm('${account.email}')">Delete</button>
+                        </div>
+                    `;
+                    staffList.appendChild(staffCard);
+                });
             }
 
-            paginatedStaff.forEach(staff => {
-                const staffCard = document.createElement('div');
-                staffCard.classList.add('staff-card');
-                const initial = staff.email.charAt(0).toUpperCase();
-                const registrationDate = new Date(staff.registrationDate).toLocaleDateString();
-
-                staffCard.innerHTML = `
-                    <div class="staff-avatar">${initial}</div>
-                    <div class="staff-info">
-                        <div class="staff-name">${staff.email}</div>
-                        <div class="staff-email">${staff.email}</div>
-                        <div class="staff-registration-date">Registered: ${registrationDate}</div>
-                    </div>
-                    <div class="staff-actions">
-                        <button class="btn btn-sm" onclick="showEditStaffModal('${staff.email}')">Edit</button>
-                        <button class="btn btn-sm" style="background-color: #dc3545;" onclick="deleteStaffAccountConfirm('${staff.email}')">Delete</button>
-                    </div>
-                `;
-                staffListDiv.appendChild(staffCard);
-            });
-
-            const totalPages = Math.ceil(filteredStaff.length / STAFF_PAGE_SIZE);
+            // Render pagination buttons
             for (let i = 1; i <= totalPages; i++) {
                 const button = document.createElement('button');
                 button.textContent = i;
                 button.classList.toggle('active', i === currentStaffPage);
-                button.onclick = () => loadStaffAccounts(i);
-                staffPaginationDiv.appendChild(button);
+                button.onclick = () => {
+                    currentStaffPage = i;
+                    loadStaffAccounts();
+                };
+                staffPagination.appendChild(button);
             }
+            console.log(`Displayed ${accountsToDisplay.length} staff accounts.`);
         }
 
         function searchStaff() {
-            loadStaffAccounts(1);
+            currentStaffPage = 1; // Reset to first page on search
+            loadStaffAccounts();
         }
 
-        let staffToEdit = null;
-        let staffToDelete = null;
+        // Toggles between list view and summary view for reports on owner dashboard.
+        function toggleReportView(viewType) {
+            console.log(`Toggling report view to: ${viewType}`);
+            const listBtn = document.querySelector('.view-toggle button:nth-child(1)');
+            const summaryBtn = document.querySelector('.view-toggle button:nth-child(2)');
+            const allReportsList = document.getElementById('all-reports-list');
+            const allReportsSummary = document.getElementById('all-reports-summary');
 
-        async function showEditStaffModal(email) {
-            console.log(`Showing edit staff modal for: ${email}`);
-            await loadAllData(); // Ensure latest staff data
-            staffToEdit = staffAccounts.find(staff => staff.email === email);
-            const editStaffEmail = document.getElementById('edit-staff-email');
-            const editStaffPassword = document.getElementById('edit-staff-password');
-            const editStaffModal = document.getElementById('edit-staff-modal');
-
-            if (!editStaffEmail || !editStaffPassword || !editStaffModal) {
-                console.error("Missing DOM elements for edit staff modal.");
-                alert("An internal error occurred. Please refresh the page.");
+            if (!listBtn || !summaryBtn || !allReportsList || !allReportsSummary) {
+                console.error("One or more report view toggle elements not found.");
                 return;
             }
 
-            if (staffToEdit) {
-                editStaffEmail.value = staffToEdit.email;
-                editStaffPassword.value = ''; // Always clear password field for security
-                editStaffModal.style.display = 'flex';
-            } else {
-                console.warn(`Staff with email ${email} not found for editing.`);
+            listBtn.classList.remove('active');
+            summaryBtn.classList.remove('active');
+            allReportsList.classList.add('hidden');
+            allReportsSummary.classList.add('hidden');
+
+            if (viewType === 'list') {
+                listBtn.classList.add('active');
+                allReportsList.classList.remove('hidden');
+                loadAllReportsList();
+            } else if (viewType === 'summary') {
+                summaryBtn.classList.add('active');
+                allReportsSummary.classList.remove('hidden');
+                loadAllReportsSummary();
             }
         }
 
-        function hideEditStaffModal() {
-            const modal = document.getElementById('edit-staff-modal');
-            if (modal) modal.style.display = 'none';
-            staffToEdit = null;
+        // Loads and displays all daily reports in a list format for the owner dashboard.
+        function loadAllReportsList() {
+            console.log(`Loading all reports list view (page ${currentReportsPage})...`);
+            const reportsList = document.getElementById('all-reports-list');
+            const reportPagination = document.getElementById('report-pagination');
+            if (!reportsList || !reportPagination) {
+                console.error("Reports list or pagination element not found.");
+                return;
+            }
+            reportsList.innerHTML = '';
+            reportPagination.innerHTML = '';
+
+            const sortedReports = [...dailyReports].sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+
+            const totalPages = Math.ceil(sortedReports.length / REPORTS_PAGE_SIZE);
+            const startIndex = (currentReportsPage - 1) * REPORTS_PAGE_SIZE;
+            const endIndex = startIndex + REPORTS_PAGE_SIZE;
+            const reportsToDisplay = sortedReports.slice(startIndex, endIndex);
+
+            if (reportsToDisplay.length === 0) {
+                reportsList.innerHTML = '<p>No reports found.</p>';
+            } else {
+                reportsToDisplay.forEach(report => {
+                    const reportDate = new Date(report.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    const reportElement = document.createElement('div');
+                    reportElement.className = 'report-item';
+                    reportElement.innerHTML = `
+                        <div class="report-date">
+                            Report by ${report.staffEmail} on ${reportDate}
+                            <button class="btn btn-sm" style="margin-left: 10px;" onclick="showViewReportModal(${report.id})">View Full Report</button>
+                            <button class="btn btn-sm back-btn" style="background-color: #dc3545;" onclick="deleteReportConfirm(${report.id})">Delete</button>
+                        </div>
+                        <div class="report-content">
+                            ${report.marketing ? `<strong>Marketing:</strong> ${report.marketing.substring(0, 100)}...<br>` : ''}
+                            ${report.collection ? `<strong>Collection:</strong> ${report.collection.substring(0, 100)}...<br>` : ''}
+                            ${report.commission ? `<strong>Commission:</strong> ${report.commission.substring(0, 100)}...<br>` : ''}
+                            ${report.accounts ? `<strong>Accounts:</strong> ${report.accounts.substring(0, 100)}...` : ''}
+                        </div>
+                    `;
+                    reportsList.appendChild(reportElement);
+                });
+            }
+
+            // Render pagination buttons
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.classList.toggle('active', i === currentReportsPage);
+                button.onclick = () => {
+                    currentReportsPage = i;
+                    loadAllReportsList();
+                };
+                reportPagination.appendChild(button);
+            }
+            console.log(`Displayed ${reportsToDisplay.length} reports in list view.`);
         }
 
+        // Loads and displays all daily reports in a summary format for the owner dashboard.
+        function loadAllReportsSummary() {
+            console.log(`Loading all reports summary view (page ${currentReportsPage})...`);
+            const reportsSummary = document.getElementById('all-reports-summary');
+            const reportPagination = document.getElementById('report-pagination'); // Reuse same pagination element
+            if (!reportsSummary || !reportPagination) {
+                console.error("Reports summary or pagination element not found.");
+                return;
+            }
+            reportsSummary.innerHTML = '';
+            reportPagination.innerHTML = '';
+
+            const sortedReports = [...dailyReports].sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+
+            const totalPages = Math.ceil(sortedReports.length / REPORTS_PAGE_SIZE);
+            const startIndex = (currentReportsPage - 1) * REPORTS_PAGE_SIZE;
+            const endIndex = startIndex + REPORTS_PAGE_SIZE;
+            const reportsToDisplay = sortedReports.slice(startIndex, endIndex);
+
+            if (reportsToDisplay.length === 0) {
+                reportsSummary.innerHTML = '<p>No reports found.</p>';
+            } else {
+                reportsToDisplay.forEach(report => {
+                    const reportDate = new Date(report.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    const summaryCard = document.createElement('div');
+                    summaryCard.className = 'summary-card';
+                    summaryCard.innerHTML = `
+                        <div class="summary-employee">${report.staffEmail}</div>
+                        <div class="summary-date">${reportDate}</div>
+                        <div class="summary-section">
+                            <div class="summary-section-title">Marketing</div>
+                            <div class="summary-content">${report.marketing || 'N/A'}</div>
+                        </div>
+                        <div class="summary-section">
+                            <div class="summary-section-title">Collection</div>
+                            <div class="summary-content">${report.collection || 'N/A'}</div>
+                        </div>
+                        <div class="summary-section">
+                            <div class="summary-section-title">Commission Received</div>
+                            <div class="summary-content">${report.commission || 'N/A'}</div>
+                        </div>
+                        <div class="summary-section">
+                            <div class="summary-section-title">Accounts</div>
+                            <div class="summary-content">${report.accounts || 'N/A'}</div>
+                        </div>
+                        <button class="btn btn-sm" style="margin-top: 15px;" onclick="deleteReportConfirm(${report.id})">Delete Report</button>
+                    `;
+                    reportsSummary.appendChild(summaryCard);
+                });
+            }
+
+            // Render pagination buttons
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.classList.toggle('active', i === currentReportsPage);
+                button.onclick = () => {
+                    currentReportsPage = i;
+                    loadAllReportsSummary();
+                };
+                reportPagination.appendChild(button);
+            }
+            console.log(`Displayed ${reportsToDisplay.length} reports in summary view.`);
+        }
+
+        // Shows the confirmation modal for report submission.
+        function showConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                console.log("Confirmation modal shown.");
+            } else {
+                console.error("Confirmation modal element not found.");
+            }
+        }
+
+        // Hides the confirmation modal.
+        function hideConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            if (modal) {
+                modal.style.display = 'none';
+                console.log("Confirmation modal hidden.");
+            }
+        }
+
+        // Shows the full report view modal for owner.
+        function showViewReportModal(reportId) {
+            console.log(`Showing full report modal for report ID: ${reportId}`);
+            const report = dailyReports.find(r => r.id === reportId);
+            const modal = document.getElementById('view-report-modal');
+            const titleElement = document.getElementById('view-report-title');
+            const bodyElement = document.getElementById('view-report-body');
+
+            if (!modal || !titleElement || !bodyElement) {
+                console.error("One or more view report modal elements not found.");
+                return;
+            }
+
+            if (report) {
+                const reportDate = new Date(report.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                titleElement.textContent = `Report by ${report.staffEmail} on ${reportDate}`;
+                bodyElement.innerHTML = `
+                    <div class="summary-section">
+                        <div class="summary-section-title">Marketing</div>
+                        <div class="summary-content">${report.marketing || 'N/A'}</div>
+                    </div>
+                    <div class="summary-section">
+                        <div class="summary-section-title">Collection</div>
+                        <div class="summary-content">${report.collection || 'N/A'}</div>
+                    </div>
+                    <div class="summary-section">
+                        <div class="summary-section-title">Commission Received</div>
+                        <div class="summary-content">${report.commission || 'N/A'}</div>
+                    </div>
+                    <div class="summary-section">
+                        <div class="summary-section-title">Accounts</div>
+                        <div class="summary-content">${report.accounts || 'N/A'}</div>
+                    </div>
+                `;
+                modal.style.display = 'flex';
+                console.log("View report modal populated and shown.");
+            } else {
+                alert("Report not found.");
+                console.warn(`Report with ID ${reportId} not found.`);
+            }
+        }
+
+        // Hides the full report view modal.
+        function hideViewReportModal() {
+            const modal = document.getElementById('view-report-modal');
+            if (modal) {
+                modal.style.display = 'none';
+                console.log("View report modal hidden.");
+            }
+        }
+
+        let staffToEditEmail = null; // Store email of staff being edited
+        let reportToDeleteId = null; // Store ID of report being deleted
+
+        // Shows the edit staff modal for owner.
+        function showEditStaffModal(email) {
+            console.log(`Showing edit staff modal for: ${email}`);
+            staffToEditEmail = email;
+            const staff = staffAccounts.find(acc => acc.email === email);
+            const modal = document.getElementById('edit-staff-modal');
+            const emailInput = document.getElementById('edit-staff-email');
+
+            if (!modal || !emailInput) {
+                console.error("Edit staff modal or email input not found.");
+                return;
+            }
+
+            if (staff) {
+                emailInput.value = staff.email;
+                document.getElementById('edit-staff-password').value = ''; // Clear password field
+                modal.style.display = 'flex';
+                console.log("Edit staff modal populated and shown.");
+            } else {
+                alert("Staff account not found.");
+                console.warn(`Staff account with email ${email} not found.`);
+            }
+        }
+
+        // Hides the edit staff modal.
+        function hideEditStaffModal() {
+            const modal = document.getElementById('edit-staff-modal');
+            if (modal) {
+                modal.style.display = 'none';
+                staffToEditEmail = null;
+                console.log("Edit staff modal hidden.");
+            }
+        }
+
+        // Updates staff account details (only password) from owner dashboard.
         async function updateStaffAccount() {
-            console.log("Attempting to update staff account...");
-            if (!staffToEdit) {
-                console.error("No staff account selected for editing.");
+            console.log(`Attempting to update staff account for: ${staffToEditEmail}`);
+            if (!staffToEditEmail) {
+                alert("No staff selected for editing.");
                 return;
             }
 
             const newPasswordInput = document.getElementById('edit-staff-password');
             if (!newPasswordInput) {
-                console.error("Missing password input for staff update.");
-                alert("An internal error occurred. Please refresh the page.");
+                console.error("New password input element not found for updateStaffAccount.");
                 return;
             }
+
             const newPassword = newPasswordInput.value.trim();
-            
-            if (newPassword) {
-                const passwordRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{6,}$/;
-                if (!passwordRegex.test(newPassword)) {
-                    alert('New password must contain at least 6 characters, one digit, and one special character.');
-                    return;
-                }
-                staffToEdit.password = hashPassword(newPassword);
+
+            if (!newPassword) {
+                // If password is empty, no change to password, just save other potential updates (though none exist here yet)
+                alert("No new password entered. No changes saved for password.");
+                hideEditStaffModal();
+                return;
             }
-            
-            await loadAllData(); // Fetch latest staff accounts before updating
-            const index = staffAccounts.findIndex(s => s.email === staffToEdit.email);
-            if (index !== -1) {
-                staffAccounts[index] = staffToEdit; // Update the object in the array
-                const updated = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
-                if (updated) {
-                    alert('Staff account updated successfully!');
+
+            // Password policy
+            const passwordRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{6,}$/;
+            if (!passwordRegex.test(newPassword)) {
+                alert("New password must be at least 6 characters long and contain at least one digit and one special character.");
+                return;
+            }
+
+            await loadAllData(); // Ensure latest accounts are loaded
+            const staffIndex = staffAccounts.findIndex(acc => acc.email === staffToEditEmail);
+
+            if (staffIndex !== -1) {
+                staffAccounts[staffIndex].password = hashPassword(newPassword);
+                const updatedBin = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
+
+                if (updatedBin) {
+                    alert("Staff account updated successfully!");
                     hideEditStaffModal();
-                    loadStaffAccounts();
+                    loadStaffAccounts(); // Reload the list
                 } else {
-                    alert('Failed to update staff account. Please try again. Check console for API errors.');
+                    alert("Failed to update staff account. Please try again.");
                 }
             } else {
-                console.error(`Staff account with email ${staffToEdit.email} not found in current data for update.`);
-                alert("Staff account not found. It might have been deleted by another owner. Please refresh.");
+                alert("Staff account not found.");
             }
         }
 
+        // Shows confirmation modal before deleting a staff account.
         function deleteStaffAccountConfirm(email) {
-            console.log(`Confirming deletion for staff: ${email}`);
-            staffToDelete = email;
+            console.log(`Showing delete staff confirmation for: ${email}`);
+            staffToEditEmail = email; // Reuse this variable
             const modal = document.getElementById('delete-staff-confirm-modal');
-            if (modal) modal.style.display = 'flex';
-            else console.warn("Delete staff confirm modal not found.");
+            if (modal) {
+                modal.style.display = 'flex';
+            } else {
+                console.error("Delete staff confirmation modal not found.");
+            }
         }
 
+        // Hides delete staff confirmation modal.
         function hideDeleteStaffConfirmModal() {
             const modal = document.getElementById('delete-staff-confirm-modal');
-            if (modal) modal.style.display = 'none';
-            staffToDelete = null;
+            if (modal) {
+                modal.style.display = 'none';
+                staffToEditEmail = null;
+            }
         }
 
+        // Deletes a staff account and their associated reports.
         async function deleteStaffAccount() {
-            console.log(`Attempting to delete staff: ${staffToDelete}`);
-            if (!staffToDelete) {
-                console.error("No staff account selected for deletion.");
+            console.log(`Attempting to delete staff account: ${staffToEditEmail}`);
+            hideDeleteStaffConfirmModal(); // Hide confirmation modal
+
+            if (!staffToEditEmail) {
+                alert("No staff selected for deletion.");
                 return;
             }
 
-            await loadAllData(); // Fetch latest data before deletion
+            await loadAllData(); // Ensure latest data
 
-            const originalStaffAccounts = [...staffAccounts]; // For potential rollback
-            const originalDailyReports = [...dailyReports];
-
-            // Remove staff account
-            staffAccounts = staffAccounts.filter(staff => staff.email !== staffToDelete);
-            const staffUpdated = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
-
-            if (!staffUpdated) {
-                alert('Failed to delete staff account. Please try again. Check console for API errors.');
-                staffAccounts = originalStaffAccounts; // Revert
+            // Delete staff account
+            const initialStaffCount = staffAccounts.length;
+            staffAccounts = staffAccounts.filter(acc => acc.email !== staffToEditEmail);
+            if (staffAccounts.length === initialStaffCount) {
+                alert("Staff account not found for deletion.");
                 return;
             }
 
-            // Remove all reports associated with this staff
-            dailyReports = dailyReports.filter(report => report.email !== staffToDelete);
-            const reportsUpdated = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+            // Delete associated reports
+            const initialReportCount = dailyReports.length;
+            dailyReports = dailyReports.filter(report => report.staffEmail !== staffToEditEmail);
 
-            if (!reportsUpdated) {
-                alert('Staff account deleted, but failed to delete associated reports. Please manually clean up reports. Check console for API errors.');
-                dailyReports = originalDailyReports; // Revert reports only
-                // Note: In a real backend, this would be a single, transactional operation.
+            const updatedStaffBin = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
+            const updatedReportsBin = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+
+            if (updatedStaffBin && updatedReportsBin) {
+                alert(`Staff account ${staffToEditEmail} and all associated reports have been deleted.`);
+                staffToEditEmail = null;
+                loadStaffAccounts(); // Refresh staff list
+                toggleReportView('list'); // Refresh reports list
             } else {
-                alert(`Staff account ${staffToDelete} and all their reports deleted successfully.`);
-            }
-
-            hideDeleteStaffConfirmModal();
-            loadStaffAccounts();
-            loadAllReports();
-            staffToDelete = null;
-        }
-
-
-        function toggleReportView(view) {
-            console.log(`Toggling report view to: ${view}`);
-            const listView = document.getElementById('all-reports-list');
-            const summaryView = document.getElementById('all-reports-summary');
-            const listButton = document.querySelector('.view-toggle button:nth-child(1)');
-            const summaryButton = document.querySelector('.view-toggle button:nth-child(2)');
-
-            if (!listView || !summaryView || !listButton || !summaryButton) {
-                console.error("Missing DOM elements for report view toggle.");
-                return;
-            }
-
-            if (view === 'list') {
-                listView.classList.remove('hidden');
-                summaryView.classList.add('hidden');
-                listButton.classList.add('active');
-                summaryButton.classList.remove('active');
-            } else {
-                listView.classList.add('hidden');
-                summaryView.classList.remove('hidden');
-                listButton.classList.remove('active');
-                summaryButton.classList.add('active');
-            }
-            loadAllReports(currentReportsPage, view);
-        }
-
-        async function loadAllReports(page = 1, view = null) {
-            console.log(`Loading all reports, page: ${page}, view: ${view}`);
-            currentReportsPage = page;
-            await loadAllData(); // Fetch latest reports
-            const allReportsList = document.getElementById('all-reports-list');
-            const allReportsSummary = document.getElementById('all-reports-summary');
-            const reportPaginationDiv = document.getElementById('report-pagination');
-
-            if (!allReportsList || !allReportsSummary || !reportPaginationDiv) {
-                console.error("Missing DOM elements for all reports list, summary, or pagination.");
-                return;
-            }
-
-            allReportsList.innerHTML = '';
-            allReportsSummary.innerHTML = '';
-            reportPaginationDiv.innerHTML = '';
-
-            const sortedReports = [...dailyReports].sort((a, b) => {
-                const dateA = new Date(b.date);
-                const dateB = new Date(a.date);
-                if (dateA - dateB !== 0) {
-                    return dateA - dateB;
-                }
-                return a.email.localeCompare(b.email);
-            });
-
-            // Filter out reports older than 30 days and delete them from the bin
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            const initialReportsCount = dailyReports.length;
-            dailyReports = sortedReports.filter(report => new Date(report.date) >= thirtyDaysAgo);
-
-            if (dailyReports.length < initialReportsCount) {
-                console.log("Detected older reports. Attempting to delete them from JSONBin...");
-                const deleteResult = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
-                if (!deleteResult) {
-                    console.error("Failed to prune old reports from JSONBin. You may need to manually clean old data if this persists.");
-                }
-            }
-
-            const filteredAndSortedReports = dailyReports; // Use the potentially cleaned list
-
-            const startIndex = (currentReportsPage - 1) * REPORTS_PAGE_SIZE;
-            const endIndex = startIndex + REPORTS_PAGE_SIZE;
-            const paginatedReports = filteredAndSortedReports.slice(startIndex, endIndex);
-
-            if (paginatedReports.length === 0) {
-                allReportsList.innerHTML = '<p style="text-align: center; color: #666;">No reports found.</p>';
-                allReportsSummary.innerHTML = '<p style="text-align: center; color: #666;">No reports found.</p>';
-                return;
-            }
-
-            const activeViewButton = document.querySelector('.view-toggle button.active');
-            const currentView = view || (activeViewButton ? activeViewButton.textContent.toLowerCase().includes('list') ? 'list' : 'summary' : 'list');
-
-
-            paginatedReports.forEach(report => {
-                const staff = staffAccounts.find(s => s.email === report.email);
-                const staffDisplayName = staff ? staff.email : report.email;
-                const reportDateFormatted = new Date(report.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
-
-                const listItem = document.createElement('div');
-                listItem.classList.add('report-item');
-                listItem.innerHTML = `
-                    <div class="report-date"><strong>${staffDisplayName}</strong> - ${reportDateFormatted}</div>
-                    <div class="report-content">
-                        ${report.marketing ? `<strong>Marketing:</strong> ${report.marketing}<br>` : ''}
-                        ${report.collection ? `<strong>Collection:</strong> ${report.collection}<br>` : ''}
-                        ${report.commission ? `<strong>Commission Received:</strong> ${report.commission}<br>` : ''}
-                        ${report.accounts ? `<strong>Accounts:</strong> ${report.accounts}<br>` : ''}
-                    </div>
-                    <div class="staff-actions" style="justify-content: flex-end; margin-top: 10px;">
-                        <button class="btn btn-sm" onclick="showViewReportModal(${report.id})">View</button>
-                        <button class="btn btn-sm" style="background-color: #dc3545;" onclick="deleteReportConfirm(${report.id})">Delete</button>
-                    </div>
-                `;
-                allReportsList.appendChild(listItem);
-
-                const summaryCard = document.createElement('div');
-                summaryCard.classList.add('summary-card');
-                summaryCard.innerHTML = `
-                    <div class="summary-employee">${staffDisplayName}</div>
-                    <div class="summary-date">${reportDateFormatted}</div>
-                    <div class="summary-content">
-                        ${report.marketing ? `<div class="summary-section"><div class="summary-section-title">Marketing:</div> ${report.marketing}</div>` : ''}
-                        ${report.collection ? `<div class="summary-section"><div class="summary-section-title">Collection:</div> ${report.collection}</div>` : ''}
-                        ${report.commission ? `<div class="summary-section"><div class="summary-section-title">Commission:</div> ${report.commission}</div>` : ''}
-                        ${report.accounts ? `<div class="summary-section"><div class="summary-section-title">Accounts:</div> ${report.accounts}</div>` : ''}
-                    </div>
-                    <div class="staff-actions" style="justify-content: flex-end; margin-top: 10px;">
-                        <button class="btn btn-sm" onclick="showViewReportModal(${report.id})">View</button>
-                        <button class="btn btn-sm" style="background-color: #dc3545;" onclick="deleteReportConfirm(${report.id})">Delete</button>
-                    </div>
-                `;
-                allReportsSummary.appendChild(summaryCard);
-            });
-
-            if (currentView === 'list') {
-                allReportsList.classList.remove('hidden');
-                allReportsSummary.classList.add('hidden');
-            } else {
-                allReportsList.classList.add('hidden');
-                allReportsSummary.classList.remove('hidden');
-            }
-
-            const totalPages = Math.ceil(filteredAndSortedReports.length / REPORTS_PAGE_SIZE);
-            for (let i = 1; i <= totalPages; i++) {
-                const button = document.createElement('button');
-                button.textContent = i;
-                button.classList.toggle('active', i === currentReportsPage);
-                button.onclick = () => loadAllReports(i, currentView);
-                reportPaginationDiv.appendChild(button);
+                alert("Failed to delete staff account or associated reports. Please try again.");
+                // Potentially reload all data and re-render if partial failure
+                await loadAllData();
+                loadStaffAccounts();
+                toggleReportView('list');
             }
         }
 
-        let reportToView = null;
-        let reportToDeleteId = null;
-
-        async function showViewReportModal(reportId) {
-            console.log(`Showing view report modal for ID: ${reportId}`);
-            await loadAllData(); // Ensure latest reports
-            reportToView = dailyReports.find(r => r.id === reportId);
-            const modalTitle = document.getElementById('view-report-title');
-            const modalBody = document.getElementById('view-report-body');
-            const viewReportModal = document.getElementById('view-report-modal');
-
-            if (!modalTitle || !modalBody || !viewReportModal) {
-                console.error("Missing DOM elements for view report modal.");
-                alert("An internal error occurred. Please refresh the page.");
-                return;
-            }
-
-            if (reportToView) {
-                const staff = staffAccounts.find(s => s.email === reportToView.email);
-                const staffDisplayName = staff ? staff.email : reportToView.email + ' (Account Deleted)';
-                const reportDateFormatted = new Date(reportToView.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-                modalTitle.textContent = `Report by ${staffDisplayName} on ${reportDateFormatted}`;
-                modalBody.innerHTML = `
-                    ${reportToView.marketing ? `<p><strong>Marketing:</strong><br>${reportToView.marketing}</p>` : ''}
-                    ${reportToView.collection ? `<p><strong>Collection:</strong><br>${reportToView.collection}</p>` : ''}
-                    ${reportToView.commission ? `<p><strong>Commission Received:</strong><br>${reportToView.commission}</p>` : ''}
-                    ${reportToView.accounts ? `<p><strong>Accounts:</strong><br>${reportToView.accounts}</p>` : ''}
-                `;
-                viewReportModal.style.display = 'flex';
-            } else {
-                console.warn(`Report with ID ${reportId} not found for viewing.`);
-            }
-        }
-
-        function hideViewReportModal() {
-            const modal = document.getElementById('view-report-modal');
-            if (modal) modal.style.display = 'none';
-            reportToView = null;
-        }
-
-        function deleteReportConfirm(reportId) {
-            console.log(`Confirming deletion for report ID: ${reportId}`);
-            reportToDeleteId = reportId;
+        // Shows confirmation modal before deleting a report.
+        function deleteReportConfirm(id) {
+            console.log(`Showing delete report confirmation for ID: ${id}`);
+            reportToDeleteId = id;
             const modal = document.getElementById('delete-report-confirm-modal');
-            if (modal) modal.style.display = 'flex';
-            else console.warn("Delete report confirm modal not found.");
+            if (modal) {
+                modal.style.display = 'flex';
+            } else {
+                console.error("Delete report confirmation modal not found.");
+            }
         }
 
+        // Hides delete report confirmation modal.
         function hideDeleteReportConfirmModal() {
             const modal = document.getElementById('delete-report-confirm-modal');
-            if (modal) modal.style.display = 'none';
-            reportToDeleteId = null;
+            if (modal) {
+                modal.style.display = 'none';
+                reportToDeleteId = null;
+            }
         }
 
+        // Deletes a specific report.
         async function deleteReport() {
-            console.log(`Attempting to delete report ID: ${reportToDeleteId}`);
+            console.log(`Attempting to delete report with ID: ${reportToDeleteId}`);
+            hideDeleteReportConfirmModal();
+
             if (reportToDeleteId === null) {
-                console.error("No report selected for deletion.");
+                alert("No report selected for deletion.");
                 return;
             }
 
-            await loadAllData(); // Fetch latest reports before deletion
-
-            const originalDailyReports = [...dailyReports]; // For potential rollback
-
+            await loadAllData(); // Ensure latest data
+            const initialReportCount = dailyReports.length;
             dailyReports = dailyReports.filter(report => report.id !== reportToDeleteId);
-            const updated = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
 
-            if (updated) {
-                alert('Report deleted successfully.');
-                hideDeleteReportConfirmModal();
-                loadAllReports(currentReportsPage);
-                if (currentUser && !ownerLoggedIn) {
-                    loadStaffReports(currentUser.email);
-                }
-            } else {
-                alert('Failed to delete report. Please try again. Check console for API errors.');
-                dailyReports = originalDailyReports; // Revert
+            if (dailyReports.length === initialReportCount) {
+                alert("Report not found for deletion.");
+                reportToDeleteId = null;
+                return;
             }
-            reportToDeleteId = null;
+
+            const updatedBin = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+
+            if (updatedBin) {
+                alert("Report deleted successfully!");
+                reportToDeleteId = null;
+                toggleReportView(document.querySelector('.view-toggle button.active').textContent.toLowerCase().includes('list') ? 'list' : 'summary'); // Refresh current view
+            } else {
+                alert("Failed to delete report. Please try again.");
+                // Potentially reload all data and re-render if partial failure
+                await loadAllData();
+                toggleReportView(document.querySelector('.view-toggle button.active').textContent.toLowerCase().includes('list') ? 'list' : 'summary');
+            }
         }
     </script>
 </body>
