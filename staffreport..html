@@ -303,6 +303,10 @@
             gap: 15px;
         }
         
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
         .date-display {
             font-size: 1.2rem;
             font-weight: bold;
@@ -312,6 +316,15 @@
             background: #f8f9fa;
             border-radius: 8px;
             text-align: center;
+        }
+        
+        .delete-older-reports {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #856404;
         }
         
         .section-title {
@@ -548,7 +561,6 @@
             <p class="subtitle">Daily Staff Report System</p>
         </header>
         
-        <!-- Main Login Screen -->
         <div id="login-screen" class="login-container">
             <h2>Welcome to Daily Report System</h2>
             <p>Please select an option to continue</p>
@@ -574,7 +586,6 @@
             </div>
         </div>
         
-        <!-- Create Account Form -->
         <div id="create-account" class="login-container hidden">
             <h2>Create Staff Account</h2>
             
@@ -595,7 +606,6 @@
             <div id="account-message" class="status-message hidden"></div>
         </div>
         
-        <!-- Staff Login Form -->
         <div id="staff-login" class="login-container hidden">
             <h2>Staff Login</h2>
             
@@ -615,13 +625,12 @@
             <div id="staff-login-message" class="status-message hidden"></div>
         </div>
         
-        <!-- Owner Login Form -->
         <div id="owner-login" class="login-container hidden">
             <h2>Owner Login</h2>
             
             <div class="form-group">
                 <label for="owner-email">Email:</label>
-                <input type="email" id="owner-email" placeholder="Enter your">
+                <input type="email" id="owner-email" placeholder="Enter your email">
             </div>
             
             <div class="form-group">
@@ -635,7 +644,6 @@
             <div id="owner-login-message" class="status-message hidden"></div>
         </div>
         
-        <!-- Staff Dashboard -->
         <div id="staff-dashboard" class="dashboard hidden">
             <div class="dashboard-header">
                 <h2>Staff Dashboard</h2>
@@ -681,147 +689,222 @@
                 <div id="edit-report-container" class="hidden">
                     <div class="form-group">
                         <div class="section-title">1. Marketing</div>
-                        <textarea id="edit-marketing-content" placeholder="Enter your marketing activities..."></textarea>
+                        <textarea id="edit-marketing-content"></textarea>
                     </div>
-                    
                     <div class="form-group">
                         <div class="section-title">2. Collection</div>
-                        <textarea id="edit-collection-content" placeholder="Enter your collection activities..."></textarea>
+                        <textarea id="edit-collection-content"></textarea>
                     </div>
-                    
                     <div class="form-group">
                         <div class="section-title">3. Commission Received</div>
-                        <textarea id="edit-commission-content" placeholder="Enter your commission details..."></textarea>
+                        <textarea id="edit-commission-content"></textarea>
                     </div>
-                    
                     <div class="form-group">
                         <div class="section-title">4. Accounts</div>
-                        <textarea id="edit-accounts-content" placeholder="Enter your accounts activities..."></textarea>
+                        <textarea id="edit-accounts-content"></textarea>
                     </div>
-                    
+                    <div class="required-notice">* At least one section must be filled</div>
                     <button class="btn" onclick="updateReport()">Update Report</button>
-                    <button class="btn back-btn" onclick="cancelEdit()">Cancel</button>
                 </div>
             </div>
-            
-            <div id="report-message" class="status-message hidden"></div>
+
+            <div class="report-section">
+                <h3>Past Reports</h3>
+                <div id="past-reports-list" class="report-list">
+                    </div>
+            </div>
         </div>
         
-        <!-- Owner Dashboard -->
         <div id="owner-dashboard" class="dashboard hidden">
             <div class="dashboard-header">
                 <h2>Owner Dashboard</h2>
                 <button class="btn back-btn" onclick="showLoginScreen()">Logout</button>
             </div>
-            
-            <div class="view-toggle">
-                <button id="daily-reports-btn" class="active" onclick="switchView('daily')">Daily Reports</button>
-                <button id="summary-reports-btn" onclick="switchView('summary')">AI Summarized Reports</button>
-                <button id="staff-list-btn" onclick="switchView('staff')">Staff Registration List</button>
-            </div>
-            
-            <!-- Daily Reports View -->
-            <div id="daily-reports-view">
-                <div class="report-section">
-                    <h3>All Staff Reports (Last 40 Days)</h3>
-                    <div id="reports-container" class="report-list">
-                        <!-- Reports will be loaded here -->
-                    </div>
-                    
-                    <div class="delete-older-reports" id="delete-notice">
-                        Reports older than 40 days will be automatically deleted.
-                    </div>
+
+            <div class="report-section">
+                <h3>Staff Accounts</h3>
+                <div class="search-box">
+                    <input type="text" id="staff-search" placeholder="Search by name or email...">
+                    <button onclick="searchStaff()">Search</button>
                 </div>
+                <div id="staff-list">
+                    </div>
+                <div class="pagination" id="staff-pagination">
+                    </div>
             </div>
-            
-            <!-- Summary Reports View -->
-            <div id="summary-reports-view" class="hidden">
-                <div class="report-section">
-                    <h3>AI Summarized Reports (Last 30 Days)</h3>
-                    <div id="summaries-container" class="report-list">
-                        <!-- Summaries will be loaded here -->
-                    </div>
-                    
-                    <div id="ai-processing" class="hidden">
-                        <p>Generating AI summaries... <span class="loading-spinner"></span></p>
-                    </div>
-                    
-                    <div class="delete-older-reports" id="summary-delete-notice">
-                        Summaries are based on reports from the last 30 days.
-                    </div>
+
+            <div class="report-section">
+                <h3>View All Daily Reports</h3>
+                <div class="view-toggle">
+                    <button class="active" onclick="toggleReportView('list')">List View</button>
+                    <button onclick="toggleReportView('summary')">Summary View</button>
                 </div>
+                <div id="all-reports-list" class="report-list">
+                    </div>
+                <div id="all-reports-summary" class="hidden">
+                    </div>
+                <div class="pagination" id="report-pagination">
+                    </div>
             </div>
-            
-            <!-- Staff Registration List View -->
-            <div id="staff-list-view" class="hidden">
-                <div class="report-section">
-                    <h3>Staff Registration List</h3>
-                    
-                    <div class="search-box">
-                        <input type="text" id="staff-search" placeholder="Search staff by email or name...">
-                        <button onclick="searchStaff()">Search</button>
-                    </div>
-                    
-                    <div id="staff-container" class="report-list">
-                        <!-- Staff list will be loaded here -->
-                    </div>
-                    
-                    <div id="staff-pagination" class="pagination">
-                        <button onclick="changePage(-1)">&laquo; Previous</button>
-                        <button class="active">1</button>
-                        <button onclick="changePage(1)">Next &raquo;</button>
-                    </div>
+
+            <div class="report-section delete-older-reports">
+                <p><strong>Note:</strong> Reports older than 30 days will be automatically deleted to manage storage.</p>
+            </div>
+        </div>
+
+        <div id="confirm-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Confirm Report Submission</h2>
+                    <button class="close-modal" onclick="hideConfirmModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to submit your daily report?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="hideConfirmModal()">Cancel</button>
+                    <button class="btn" onclick="submitReport()">Confirm</button>
                 </div>
             </div>
         </div>
-        
-        <footer>
-            <p>&copy; 2023 Shree Hari Agencies. All rights reserved.</p>
-        </footer>
+
+        <div id="view-report-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="view-report-title">Daily Report</h2>
+                    <button class="close-modal" onclick="hideViewReportModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="view-report-body">
+                    </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="hideViewReportModal()">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="edit-staff-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Edit Staff Account</h2>
+                    <button class="close-modal" onclick="hideEditStaffModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="edit-staff-email">Email:</label>
+                        <input type="email" id="edit-staff-email" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-staff-password">New Password (leave blank to keep current):</label>
+                        <input type="password" id="edit-staff-password" placeholder="Enter new password">
+                        <small>Must contain at least 6 characters, one digit, and one special character</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="hideEditStaffModal()">Cancel</button>
+                    <button class="btn" onclick="updateStaffAccount()">Save Changes</button>
+                    <button class="btn btn-secondary" style="background-color: #dc3545;" onclick="deleteStaffAccountConfirm()">Delete Account</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="delete-staff-confirm-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Confirm Delete Account</h2>
+                    <button class="close-modal" onclick="hideDeleteStaffConfirmModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this staff account? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="hideDeleteStaffConfirmModal()">Cancel</button>
+                    <button class="btn" style="background-color: #dc3545;" onclick="deleteStaffAccount()">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="delete-report-confirm-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Confirm Delete Report</h2>
+                    <button class="close-modal" onclick="hideDeleteReportConfirmModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this report? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="hideDeleteReportConfirmModal()">Cancel</button>
+                    <button class="btn" style="background-color: #dc3545;" onclick="deleteReport()">Delete</button>
+                </div>
+            </div>
+        </div>
+
     </div>
     
-    <!-- Confirmation Modal -->
-    <div id="confirm-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Confirm Report Submission</h3>
-                <button class="close-modal" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p>Please confirm your report submission:</p>
-                <div class="date-display" id="modal-date"></div>
-                
-                <div class="section-title">Marketing</div>
-                <div id="preview-marketing" style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; white-space: pre-line;"></div>
-                
-                <div class="section-title">Collection</div>
-                <div id="preview-collection" style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; white-space: pre-line;"></div>
-                
-                <div class="section-title">Commission Received</div>
-                <div id="preview-commission" style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; white-space: pre-line;"></div>
-                
-                <div class="section-title">Accounts</div>
-                <div id="preview-accounts" style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; white-space: pre-line;"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button class="btn" onclick="confirmSubmitReport()">Confirm Submit</button>
-            </div>
-        </div>
-    </div>
+    <footer>
+        <p>&copy; 2023 Shree Hari Agencies. All rights reserved.</p>
+    </footer>
+
     <script>
-        // Configuration
-        const OWNER_EMAIL = "shreehariagencies12@gmail.com";
-        const OWNER_PASSWORD = "Pratik@3";
-        const ITEMS_PER_PAGE = 5;
-        
-        // Data storage using localStorage
-        let staffAccounts = JSON.parse(localStorage.getItem('staffAccounts')) || {};
-        let reports = JSON.parse(localStorage.getItem('reports')) || [];
+        // Placeholder for user data (in a real application, this would be on a server)
         let currentUser = null;
-        let currentPage = 1;
+        let ownerLoggedIn = false;
+        let staffAccounts = JSON.parse(localStorage.getItem('staffAccounts')) || [];
+        let dailyReports = JSON.parse(localStorage.getItem('dailyReports')) || [];
         
-        // Navigation functions
+        // Owner credentials (for demonstration purposes only)
+        const OWNER_EMAIL = "owner@shreehari.com";
+        const OWNER_PASSWORD = "adminpassword"; // In a real app, use hashed passwords!
+
+        // Pagination settings
+        const STAFF_PAGE_SIZE = 5;
+        let currentStaffPage = 1;
+        const REPORTS_PAGE_SIZE = 5;
+        let currentReportsPage = 1;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Display current date on staff dashboard
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').textContent = `Today: ${today.toLocaleDateString('en-US', options)}`;
+
+            // Check if reports can be submitted (after 6 PM IST)
+            checkSubmissionTime();
+            setInterval(checkSubmissionTime, 60000); // Check every minute
+            
+            showLoginScreen(); // Start with the login screen
+            loadStaffAccounts(); // Load staff accounts when page loads
+            loadAllReports(); // Load all reports for owner
+        });
+
+        function checkSubmissionTime() {
+            const now = new Date();
+            const mumbaiTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+            const hour = mumbaiTime.getHours();
+            const timeNotice = document.getElementById('time-notice');
+            const submitButton = document.querySelector('#staff-dashboard .report-section .btn');
+
+            if (hour >= 18) { // 6 PM (18:00)
+                timeNotice.classList.add('hidden');
+                submitButton.removeAttribute('disabled');
+            } else {
+                timeNotice.classList.remove('hidden');
+                submitButton.setAttribute('disabled', 'true');
+            }
+        }
+
+        function showForm(formId) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('create-account').classList.add('hidden');
+            document.getElementById('staff-login').classList.add('hidden');
+            document.getElementById('owner-login').classList.add('hidden');
+            document.getElementById('staff-dashboard').classList.add('hidden');
+            document.getElementById('owner-dashboard').classList.add('hidden');
+
+            document.getElementById(formId).classList.remove('hidden');
+            clearMessages(); // Clear any previous messages
+        }
+
         function showLoginScreen() {
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('create-account').classList.add('hidden');
@@ -830,853 +913,595 @@
             document.getElementById('staff-dashboard').classList.add('hidden');
             document.getElementById('owner-dashboard').classList.add('hidden');
             currentUser = null;
-        }
-        
-        function showForm(formId) {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('create-account').classList.add('hidden');
-            document.getElementById('staff-login').classList.add('hidden');
-            document.getElementById('owner-login').classList.add('hidden');
-            document.getElementById(formId).classList.remove('hidden');
-        }
-        
-        // Account creation
-        function createAccount() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const messageDiv = document.getElementById('account-message');
-            
-            if (!email || !password) {
-                showMessage(messageDiv, "Please fill in all fields", "error");
-                return;
-            }
-            
-            if (!isValidEmail(email)) {
-                showMessage(messageDiv, "Please enter a valid email address", "error");
-                return;
-            }
-            
-            if (!isPasswordValid(password)) {
-                showMessage(messageDiv, "Password must be at least 6 characters and contain a digit and special character", "error");
-                return;
-            }
-            
-            if (staffAccounts[email]) {
-                showMessage(messageDiv, "This email is already registered", "error");
-                return;
-            }
-            
-            // Add registration date
-            const registrationDate = getCurrentIndiaTime().toISOString().split('T')[0];
-            
-            staffAccounts[email] = {
-                password: password,
-                registrationDate: registrationDate
-            };
-            
-            localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
-            
-            showMessage(messageDiv, "Account created successfully! You can now log in.", "success");
+            ownerLoggedIn = false;
+            clearMessages();
+            // Clear input fields
             document.getElementById('email').value = '';
             document.getElementById('password').value = '';
+            document.getElementById('staff-email').value = '';
+            document.getElementById('staff-password').value = '';
+            document.getElementById('owner-email').value = '';
+            document.getElementById('owner-password').value = '';
         }
-        
-        // Login functions
+
+        function clearMessages() {
+            const messages = document.querySelectorAll('.status-message');
+            messages.forEach(msg => {
+                msg.classList.add('hidden');
+                msg.textContent = '';
+                msg.classList.remove('success', 'error', 'warning');
+            });
+        }
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.classList.remove('hidden', 'success', 'error', 'warning');
+            element.classList.add(type);
+        }
+
+        // --- Account Management (Client-Side Simulation) ---
+        function createAccount() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const accountMessage = document.getElementById('account-message');
+
+            clearMessages();
+
+            if (!email || !password) {
+                showMessage('account-message', 'Email and password cannot be empty.', 'error');
+                return;
+            }
+
+            // Simple validation (mimics backend requirements)
+            const passwordRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{6,}$/;
+            if (!passwordRegex.test(password)) {
+                showMessage('account-message', 'Password must contain at least 6 characters, one digit, and one special character.', 'error');
+                return;
+            }
+
+            if (staffAccounts.find(account => account.email === email)) {
+                showMessage('account-message', 'Account with this email already exists.', 'error');
+                return;
+            }
+
+            staffAccounts.push({ email, password: hashPassword(password), registrationDate: new Date().toISOString() }); // Store hashed password
+            localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
+            showMessage('account-message', 'Staff account created successfully! You can now login.', 'success');
+            
+            // Optionally, clear fields after successful creation
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+
+            loadStaffAccounts(); // Refresh staff list for owner
+        }
+
         function staffLogin() {
             const email = document.getElementById('staff-email').value.trim();
-            const password = document.getElementById('staff-password').value;
-            const messageDiv = document.getElementById('staff-login-message');
-            
-            if (!email || !password) {
-                showMessage(messageDiv, "Please enter both email and password", "error");
-                return;
+            const password = document.getElementById('staff-password').value.trim();
+            const loginMessage = document.getElementById('staff-login-message');
+
+            clearMessages();
+
+            const staff = staffAccounts.find(account => account.email === email && account.password === hashPassword(password));
+
+            if (staff) {
+                currentUser = staff;
+                ownerLoggedIn = false;
+                showMessage('staff-login-message', 'Login successful!', 'success');
+                setTimeout(() => {
+                    showForm('staff-dashboard');
+                    loadStaffReports(currentUser.email);
+                    clearReportForm(); // Clear the report form when entering dashboard
+                }, 500);
+            } else {
+                showMessage('staff-login-message', 'Invalid email or password.', 'error');
             }
-            
-            if (!staffAccounts[email] || staffAccounts[email].password !== password) {
-                showMessage(messageDiv, "Invalid email or password", "error");
-                return;
-            }
-            
-            currentUser = { email, type: 'staff' };
-            showStaffDashboard();
         }
-        
+
         function ownerLogin() {
             const email = document.getElementById('owner-email').value.trim();
-            const password = document.getElementById('owner-password').value;
-            const messageDiv = document.getElementById('owner-login-message');
-            
-            if (!email || !password) {
-                showMessage(messageDiv, "Please enter both email and password", "error");
-                return;
-            }
-            
-            if (email !== OWNER_EMAIL || password !== OWNER_PASSWORD) {
-                showMessage(messageDiv, "Invalid email or password", "error");
-                return;
-            }
-            
-            currentUser = { email, type: 'owner' };
-            showOwnerDashboard();
-        }
-        
-        // Dashboard functions
-        function showStaffDashboard() {
-            document.getElementById('owner-login').classList.add('hidden');
-            document.getElementById('staff-dashboard').classList.remove('hidden');
-            
-            // Display current date
-            const currentDate = getCurrentIndiaTime().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            document.getElementById('current-date').textContent = `Today: ${currentDate}`;
-            
-            // Check if after 6 PM India time
-            const now = getIndiaTime();
-            const hours = now.getHours();
-            
-            if (hours < 18) {
-                document.getElementById('time-notice').style.display = 'block';
+            const password = document.getElementById('owner-password').value.trim();
+            const loginMessage = document.getElementById('owner-login-message');
+
+            clearMessages();
+
+            if (email === OWNER_EMAIL && password === OWNER_PASSWORD) {
+                ownerLoggedIn = true;
+                currentUser = null; // Owner is not a staff user
+                showMessage('owner-login-message', 'Owner login successful!', 'success');
+                setTimeout(() => {
+                    showForm('owner-dashboard');
+                    loadStaffAccounts(); // Reload staff accounts for owner view
+                    loadAllReports(); // Reload all reports for owner view
+                }, 500);
             } else {
-                document.getElementById('time-notice').style.display = 'none';
-            }
-            
-            // Check if already submitted report today
-            const today = now.toISOString().split('T')[0];
-            const hasReportToday = reports.some(r => r.email === currentUser.email && r.date === today);
-            
-            if (hasReportToday) {
-                document.getElementById('report-message').innerHTML = "You have already submitted a report today. You can edit it below.";
-                document.getElementById('report-message').className = "status-message warning";
-                document.getElementById('report-message').classList.remove('hidden');
-                document.getElementById('report-message').classList.remove('hidden');
-            } else {
-                document.getElementById('report-message').classList.add('hidden');
+                showMessage('owner-login-message', 'Invalid owner email or password.', 'error');
             }
         }
-        
-        function showOwnerDashboard() {
-            document.getElementById('owner-login').classList.add('hidden');
-            document.getElementById('owner-dashboard').classList.remove('hidden');
-            loadAllReports();
+
+        // Simple password hashing (for client-side demo, not secure for real apps)
+        function hashPassword(password) {
+            return btoa(password); // Base64 encode for simple "hashing"
         }
-        
-        // Report functions
-        function showConfirmModal() {
-            // Validate that at least one section is filled
-            const marketing = document.getElementById('marketing-content').value.trim();
-            const collection = document.getElementById('collection-content').value.trim();
-            const commission = document.getElementById('commission-content').value.trim();
-            const accounts = document.getElementById('accounts-content').value.trim();
-            
-            if (!marketing && !collection && !commission && !accounts) {
-                showMessage(document.getElementById('report-message'), "At least one section must be filled", "error");
-                return;
-            }
-            
-            // Check if after 6 PM India time
-            if (!isAfter6PM()) {
-                showMessage(document.getElementById('report-message'), "Reports can only be submitted after 6:00 PM India time", "error");
-                return;
-            }
-            
-            // Check if already submitted report today
-            const today = getCurrentIndiaTime().toISOString().split('T')[0];
-            const existingReportIndex = reports.findIndex(r => r.email === currentUser.email && r.date === today);
-            
-            if (existingReportIndex !== -1) {
-                showMessage(document.getElementById('report-message'), "You have already submitted a report today. Use the edit option below.", "warning");
-                return;
-            }
-            
-            // Show modal with confirmation
-            const currentDate = getCurrentIndiaTime().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            document.getElementById('modal-date').textContent = `Submission Date: ${currentDate}`;
-            
-            // Preview each section
-            document.getElementById('preview-marketing').textContent = marketing || "No marketing activities reported";
-            document.getElementById('preview-collection').textContent = collection || "No collection activities reported";
-            document.getElementById('preview-commission').textContent = commission || "No commission activities reported";
-            document.getElementById('preview-accounts').textContent = accounts || "No accounts activities reported";
-            
-            document.getElementById('confirm-modal').style.display = 'flex';
-        }
-        
-        function closeModal() {
-            document.getElementById('confirm-modal').style.display = 'none';
-        }
-        
-        function confirmSubmitReport() {
-            const marketing = document.getElementById('marketing-content').value.trim();
-            const collection = document.getElementById('collection-content').value.trim();
-            const commission = document.getElementById('commission-content').value.trim();
-            const accounts = document.getElementById('accounts-content').value.trim();
-            
-            const today = getCurrentIndiaTime().toISOString().split('T')[0];
-            
-            reports.push({
-                email: currentUser.email,
-                date: today,
-                marketing: marketing,
-                collection: collection,
-                commission: commission,
-                accounts: accounts
-            });
-            
-            // Save data and clean up old reports
-            saveData();
-            cleanOldReports();
-            
-            closeModal();
-            showMessage(document.getElementById('report-message'), "Report submitted successfully!", "success");
-            
-            // Clear all textareas
+
+        // --- Staff Dashboard Functions ---
+        function clearReportForm() {
             document.getElementById('marketing-content').value = '';
             document.getElementById('collection-content').value = '';
             document.getElementById('commission-content').value = '';
             document.getElementById('accounts-content').value = '';
+            document.getElementById('edit-report-container').classList.add('hidden');
+            document.getElementById('edit-marketing-content').value = '';
+            document.getElementById('edit-collection-content').value = '';
+            document.getElementById('edit-commission-content').value = '';
+            document.getElementById('edit-accounts-content').value = '';
         }
-        
+
+        function showConfirmModal() {
+            document.getElementById('confirm-modal').style.display = 'flex';
+        }
+
+        function hideConfirmModal() {
+            document.getElementById('confirm-modal').style.display = 'none';
+        }
+
+        function submitReport() {
+            hideConfirmModal();
+
+            if (!currentUser) {
+                alert('Error: No staff member logged in.');
+                showLoginScreen();
+                return;
+            }
+
+            const marketing = document.getElementById('marketing-content').value.trim();
+            const collection = document.getElementById('collection-content').value.trim();
+            const commission = document.getElementById('commission-content').value.trim();
+            const accounts = document.getElementById('accounts-content').value.trim();
+
+            if (!marketing && !collection && !commission && !accounts) {
+                alert('At least one section must be filled to submit a report.');
+                return;
+            }
+
+            const today = new Date();
+            const reportDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+            // Check if a report for today already exists for this staff
+            const existingReportIndex = dailyReports.findIndex(r => r.email === currentUser.email && r.date === reportDate);
+
+            if (existingReportIndex !== -1) {
+                alert('You have already submitted a report for today. Please use the "Edit Today\'s Report" option to make changes.');
+                return;
+            }
+
+            const newReport = {
+                id: Date.now(), // Unique ID for the report
+                email: currentUser.email,
+                date: reportDate,
+                marketing,
+                collection,
+                commission,
+                accounts,
+                timestamp: today.toISOString()
+            };
+
+            dailyReports.push(newReport);
+            localStorage.setItem('dailyReports', JSON.stringify(dailyReports));
+            alert('Daily report submitted successfully!');
+            clearReportForm();
+            loadStaffReports(currentUser.email); // Reload past reports for staff
+            loadAllReports(); // Reload all reports for owner
+        }
+
+        function loadStaffReports(email) {
+            const pastReportsList = document.getElementById('past-reports-list');
+            pastReportsList.innerHTML = ''; // Clear previous reports
+
+            const staffReports = dailyReports
+                .filter(report => report.email === email)
+                .sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by date descending
+
+            if (staffReports.length === 0) {
+                pastReportsList.innerHTML = '<p style="text-align: center; color: #666;">No past reports found.</p>';
+                return;
+            }
+
+            staffReports.forEach(report => {
+                const reportItem = document.createElement('div');
+                reportItem.classList.add('report-item');
+                reportItem.innerHTML = `
+                    <div class="report-date">Date: ${new Date(report.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</div>
+                    <div class="report-content">
+                        ${report.marketing ? `<strong>Marketing:</strong> ${report.marketing}<br>` : ''}
+                        ${report.collection ? `<strong>Collection:</strong> ${report.collection}<br>` : ''}
+                        ${report.commission ? `<strong>Commission Received:</strong> ${report.commission}<br>` : ''}
+                        ${report.accounts ? `<strong>Accounts:</strong> ${report.accounts}<br>` : ''}
+                    </div>
+                `;
+                pastReportsList.appendChild(reportItem);
+            });
+        }
+
         function editReport() {
-            const today = getCurrentIndiaTime().toISOString().split('T')[0];
-            const todayReport = reports.find(r => r.email === currentUser.email && r.date === today);
-            
-            if (!todayReport) {
-                showMessage(document.getElementById('report-message'), "You haven't submitted a report today yet", "error");
+            if (!currentUser) {
+                alert('Error: No staff member logged in.');
+                showLoginScreen();
                 return;
             }
-            
-            // Fill in the edit form with existing data
-            document.getElementById('edit-marketing-content').value = todayReport.marketing || '';
-            document.getElementById('edit-collection-content').value = todayReport.collection || '';
-            document.getElementById('edit-commission-content').value = todayReport.commission || '';
-            document.getElementById('edit-accounts-content').value = todayReport.accounts || '';
-            
-            document.getElementById('edit-report-container').classList.remove('hidden');
+
+            const today = new Date();
+            const reportDate = today.toISOString().split('T')[0];
+            const existingReport = dailyReports.find(r => r.email === currentUser.email && r.date === reportDate);
+            const editContainer = document.getElementById('edit-report-container');
+
+            if (existingReport) {
+                editContainer.classList.remove('hidden');
+                document.getElementById('edit-marketing-content').value = existingReport.marketing || '';
+                document.getElementById('edit-collection-content').value = existingReport.collection || '';
+                document.getElementById('edit-commission-content').value = existingReport.commission || '';
+                document.getElementById('edit-accounts-content').value = existingReport.accounts || '';
+            } else {
+                alert('No report found for today. Please submit a new report first.');
+                editContainer.classList.add('hidden');
+            }
         }
-        
+
         function updateReport() {
-            const today = getCurrentIndiaTime().toISOString().split('T')[0];
-            const todayReportIndex = reports.findIndex(r => r.email === currentUser.email && r.date === today);
-            
-            if (todayReportIndex === -1) {
-                showMessage(document.getElementById('report-message'), "Report not found", "error");
+            if (!currentUser) {
+                alert('Error: No staff member logged in.');
+                showLoginScreen();
                 return;
             }
-            
+
+            const today = new Date();
+            const reportDate = today.toISOString().split('T')[0];
+            const existingReportIndex = dailyReports.findIndex(r => r.email === currentUser.email && r.date === reportDate);
+
+            if (existingReportIndex === -1) {
+                alert('No report found for today to update.');
+                return;
+            }
+
             const marketing = document.getElementById('edit-marketing-content').value.trim();
             const collection = document.getElementById('edit-collection-content').value.trim();
             const commission = document.getElementById('edit-commission-content').value.trim();
             const accounts = document.getElementById('edit-accounts-content').value.trim();
-            
-            // Validate that at least one section is filled
+
             if (!marketing && !collection && !commission && !accounts) {
-                showMessage(document.getElementById('report-message'), "At least one section must be filled", "error");
+                alert('At least one section must be filled to update the report.');
                 return;
             }
-            
-            reports[todayReportIndex] = {
-                email: currentUser.email,
-                date: today,
-                marketing: marketing,
-                collection: collection,
-                commission: commission,
-                accounts: accounts
-            };
-            
-            saveData();
-            
+
+            dailyReports[existingReportIndex].marketing = marketing;
+            dailyReports[existingReportIndex].collection = collection;
+            dailyReports[existingReportIndex].commission = commission;
+            dailyReports[existingReportIndex].accounts = accounts;
+            dailyReports[existingReportIndex].timestamp = new Date().toISOString(); // Update timestamp
+
+            localStorage.setItem('dailyReports', JSON.stringify(dailyReports));
+            alert('Daily report updated successfully!');
             document.getElementById('edit-report-container').classList.add('hidden');
-            showMessage(document.getElementById('report-message'), "Report updated successfully!", "success");
+            loadStaffReports(currentUser.email); // Reload staff reports
+            loadAllReports(); // Reload owner reports
         }
-        
-        function cancelEdit() {
-            document.getElementById('edit-report-container').classList.add('hidden');
-        }
-        
-        function loadAllReports() {
-            const container = document.getElementById('reports-container');
-            container.innerHTML = '';
-            
-            // Clean up old reports first
-            cleanReports();
-            
-            if (reports.length === 0) {
-                container.innerHTML = '<p>No reports found</p>';
+
+        // --- Owner Dashboard Functions ---
+
+        function loadStaffAccounts(page = 1) {
+            currentStaffPage = page;
+            const staffListDiv = document.getElementById('staff-list');
+            staffListDiv.innerHTML = '';
+            const staffPaginationDiv = document.getElementById('staff-pagination');
+            staffPaginationDiv.innerHTML = '';
+
+            const searchTerm = document.getElementById('staff-search').value.toLowerCase();
+            const filteredStaff = staffAccounts.filter(staff =>
+                staff.email.toLowerCase().includes(searchTerm) ||
+                (staff.name && staff.name.toLowerCase().includes(searchTerm)) // Assuming staff might have names later
+            );
+
+            const startIndex = (currentStaffPage - 1) * STAFF_PAGE_SIZE;
+            const endIndex = startIndex + STAFF_PAGE_SIZE;
+            const paginatedStaff = filteredStaff.slice(startIndex, endIndex);
+
+            if (paginatedStaff.length === 0) {
+                staffListDiv.innerHTML = '<p style="text-align: center; color: #666;">No staff accounts found.</p>';
                 return;
             }
-            
-            // Filter reports from the last 40 days
-            const fortyDaysAgo = new Date(getCurrentIndiaTime());
-            fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
-            
-            const recentReports = reports.filter(report => {
-                const reportDate = new Date(report.date);
-                return reportDate >= fortyDaysAgo;
+
+            paginatedStaff.forEach(staff => {
+                const staffCard = document.createElement('div');
+                staffCard.classList.add('staff-card');
+                const initial = staff.email.charAt(0).toUpperCase();
+                const registrationDate = new Date(staff.registrationDate).toLocaleDateString();
+
+                staffCard.innerHTML = `
+                    <div class="staff-avatar">${initial}</div>
+                    <div class="staff-info">
+                        <div class="staff-name">${staff.email}</div>
+                        <div class="staff-email">${staff.email}</div>
+                        <div class="staff-registration-date">Registered: ${registrationDate}</div>
+                    </div>
+                    <div class="staff-actions">
+                        <button class="btn btn-sm" onclick="showEditStaffModal('${staff.email}')">Edit</button>
+                        <button class="btn btn-sm" style="background-color: #dc3545;" onclick="deleteStaffAccountConfirm('${staff.email}')">Delete</button>
+                    </div>
+                `;
+                staffListDiv.appendChild(staffCard);
             });
-            
-            if (recentReports.length === 0) {
-                container.innerHTML = '<p>No reports from the last 40 days</p>';
-                return;
-            }
-            
-            // Group reports by date
-            const reportsByDate = {};
-            recentReports.forEach(report => {
-                if (!reportsByDate[report.date]) {
-                    reportsByDate[report.date] = [];
-                }
-                reportsByDate[report.date].push(report);
-            });
-            
-            // Sort dates in descending order
-            const sortedDates = Object.keys(reportsByDate).sort().reverse();
-            
-            sortedDates.forEach(date => {
-                const dateHeader = document.createElement('h4');
-                dateHeader.textContent = formatDate(date);
-                container.appendChild(dateHeader);
-                
-                reportsByDate[date].forEach(report => {
-                    const reportDiv = document.createElement('div');
-                    reportDiv.className = 'report-item';
-                    
-                    const emailDiv = document.createElement('div');
-                    emailDiv.className = 'report-email';
-                    emailDiv.textContent = `Staff: ${report.email}`;
-                    
-                    // Create sections for each part of the report
-                    const sections = [
-                        { title: 'Marketing', content: report.marketing },
-                        { title: 'Collection', content: report.collection },
-                        { title: 'Commission Received', content: report.commission },
-                        { title: 'Accounts', content: report.accounts }
-                    ];
-                    
-                    sections.forEach(section => {
-                        if (section.content) {
-                            const sectionDiv = document.createElement('div');
-                            sectionDiv.className = 'report-section';
-                            
-                            const sectionTitle = document.createElement('div');
-                            sectionTitle.className = 'section-title';
-                            sectionTitle.textContent = section.title;
-                            
-                            const sectionContent = document.createElement('div');
-                            sectionContent.className = 'report-content';
-                            sectionContent.textContent = section.content;
-                            
-                            sectionDiv.appendChild(sectionTitle);
-                            sectionDiv.appendChild(sectionContent);
-                            reportDiv.appendChild(sectionDiv);
-                        }
-                    });
-                    
-                    container.appendChild(reportDiv);
-                });
-            });
-            
-            // Show notice about deleted reports
-            const deletedCount = reports.length - recentReports.length;
-            if (deletedCount > 0) {
-                document.getElementById('delete-notice').textContent = 
-                    `${deletedCount} reports older than 40 days were automatically deleted.`;
+
+            // Pagination buttons
+            const totalPages = Math.ceil(filteredStaff.length / STAFF_PAGE_SIZE);
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.classList.toggle('active', i === currentStaffPage);
+                button.onclick = () => loadStaffAccounts(i);
+                staffPaginationDiv.appendChild(button);
             }
         }
-        
-        // AI Summary Functions
-        function generateAISummary() {
-            const container = document.getElementById('summaries-container');
-            const processingDiv = document.getElementById('ai-processing');
-            
-            // Show loading indicator
-            processingDiv.classList.remove('hidden');
-            container.innerHTML = '';
-            
-            // Simulate AI processing time
-            setTimeout(() => {
-                // Get reports from the last 30 days
-                const thirtyDaysAgo = new Date(getCurrentIndiaTime());
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                
-                const recentReports = reports.filter(report => {
-                    const reportDate = new Date(report.date);
-                    return reportDate >= thirtyDaysAgo;
-                });
-                
-                if (recentReports.length === 0) {
-                    container.innerHTML = '<p>No reports from the last 30 days</p>';
-                    processingDiv.classList.add('hidden');
+
+        function searchStaff() {
+            loadStaffAccounts(1); // Reset to first page on search
+        }
+
+        let staffToEdit = null;
+        let staffToDelete = null;
+
+        function showEditStaffModal(email) {
+            staffToEdit = staffAccounts.find(staff => staff.email === email);
+            if (staffToEdit) {
+                document.getElementById('edit-staff-email').value = staffToEdit.email;
+                document.getElementById('edit-staff-password').value = ''; // Clear password field
+                document.getElementById('edit-staff-modal').style.display = 'flex';
+            }
+        }
+
+        function hideEditStaffModal() {
+            document.getElementById('edit-staff-modal').style.display = 'none';
+            staffToEdit = null;
+        }
+
+        function updateStaffAccount() {
+            if (!staffToEdit) return;
+
+            const newPassword = document.getElementById('edit-staff-password').value.trim();
+            const editAccountMessage = document.getElementById('edit-staff-modal').querySelector('.status-message'); // A message element inside modal would be good
+            clearMessages(); // Clear main messages, could add one to modal too
+
+            if (newPassword) {
+                const passwordRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{6,}$/;
+                if (!passwordRegex.test(newPassword)) {
+                    alert('New password must contain at least 6 characters, one digit, and one special character.');
                     return;
                 }
-                
-                // Group reports by employee
-                const reportsByEmployee = {};
-                recentReports.forEach(report => {
-                    if (!reportsByEmployee[report.email]) {
-                        reportsByEmployee[report.email] = [];
-                    }
-                    reportsByEmployee[report.email].push(report);
-                });
-                
-                // Generate summaries for each employee
-                Object.keys(reportsByEmployee).forEach(email => {
-                    const employeeReports = reportsByEmployee[email];
-                    
-                    // Create summary card
-                    const summaryCard = document.createElement('div');
-                    summaryCard.className = 'summary-card';
-                    
-                    const employeeHeader = document.createElement('div');
-                    employeeHeader.className = 'summary-employee';
-                    employeeHeader.textContent = `Employee: ${email}`;
-                    summaryCard.appendChild(employeeHeader);
-                    
-                    // Generate AI summary
-                    const summary = generateAIReportSummary(employeeReports);
-                    
-                    const summaryContent = document.createElement('div');
-                    summaryContent.className = 'summary-content';
-                    summaryContent.textContent = summary;
-                    summaryCard.appendChild(summaryContent);
-                    
-                    // Add AI badge
-                    const aiBadge = document.createElement('span');
-                    aiBadge.className = 'ai-badge';
-                    aiBadge.textContent = 'AI Generated';
-                    summaryCard.appendChild(aiBadge);
-                    
-                    container.appendChild(summaryCard);
-                });
-                
-                processingDiv.classList.add('hidden');
-            }, 2000); // Simulate 2 seconds processing time
-        }
-        
-        function generateAIReportSummary(employeeReports) {
-            // Simple AI summarization logic
-            let summary = '';
-            
-            // Count activities by category
-            let marketingCount = 0;
-            let collectionCount = 0;
-            let commissionTotal = 0;
-            let accountsCount = 0;
-            
-            let marketingHighlights = [];
-            let collectionHighlights = [];
-            let commissionHighlights = [];
-            let accountsHighlights = [];
-            
-            employeeReports.forEach(report => {
-                if (report.marketing) {
-                    marketingCount++;
-                    if (report.marketing.length > 50) {
-                        marketingHighlights.push(report.marketing.substring(0, 100) + '...');
-                    }
-                }
-                
-                if (report.collection) {
-                    collectionCount++;
-                    if (report.collection.length > 50) {
-                        collectionHighlights.push(report.collection.substring(0, 100) + '...');
-                    }
-                }
-                
-                if (report.commission) {
-                    commissionTotal++;
-                    if (report.commission.includes('₹') || report.commission.includes('$')) {
-                        commissionHighlights.push(report.commission);
-                    }
-                }
-                
-                if (report.accounts) {
-                    accountsCount++;
-                    if (report.accounts.length > 50) {
-                        accountsHighlights.push(report.accounts.substring(0, 100) + '...');
-                    }
-                }
-            });
-            
-            // Generate summary
-            summary += `Over the past 30 days, this employee has been active in ${marketingCount} marketing activities, `;
-            summary += `${collectionCount} collection activities, and completed ${accountsCount} accounts-related tasks. `;
-            
-            if (commissionTotal > 0) {
-                summary += `They have processed ${commissionTotal} commission-related transactions. `;
+                staffToEdit.password = hashPassword(newPassword);
             }
             
-            // Add highlights
-            if (marketingHighlights.length > 0) {
-                summary += `Key marketing activities included: ${marketingHighlights.join('; ')}. `;
-            }
-            
-            if (collectionHighlights.length > 0) {
-                summary += `Notable collection activities: ${collectionHighlights.join('; ')}. `;
-            }
-            
-            if (commissionHighlights.length > 0) {
-                summary += `Commission transactions: ${commissionHighlights.join('; ')}. `;
-            }
-            
-            if (accountsHighlights.length > 0) {
-                summary += `Important accounts activities: ${accountsHighlights.join('; ')}. `;
-            }
-            
-            // Add overall assessment
-            if (marketingCount + collectionCount + commissionTotal + accountsCount > 20) {
-                summary += `The employee has shown high activity levels across all departments.`;
-            } else if (marketingCount + collectionCount + commissionTotal + accountsCount > 10) {
-                summary += `The employee has maintained consistent activity levels throughout the period.`;
-            } else {
-                summary += `The employee has focused on specific areas with targeted efforts.`;
-            }
-            
-            return summary;
-        }
-        
-        // Staff Registration List Functions
-        function loadStaffList() {
-            const container = document.getElementById('staff-container');
-            container.innerHTML = '';
-            
-            // Get all staff emails
-            const staffEmails = Object.keys(staffAccounts);
-            
-            if (staffEmails.length === 0) {
-                container.innerHTML = '<p>No staff registered yet</p>';
-                return;
-            }
-            
-            // Calculate pagination
-            const totalPages = Math.ceil(staffEmails.length / ITEMS_PER_PAGE);
-            if (currentPage > totalPages) {
-                currentPage = totalPages;
-            }
-            
-            // Get current page items
-            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, staffEmails.length);
-            const currentStaff = staffEmails.slice(startIndex, endIndex);
-            
-            // Create staff cards
-            currentStaff.forEach(email => {
-                const staffData = staffAccounts[email];
-                
-                const staffCard = document.createElement('div');
-                staffCard.className = 'staff-card';
-                
-                const avatarDiv = document.createElement('div');
-                avatarDiv.className = 'staff-avatar';
-                // Get first letter of name for avatar
-                const initial = email.split('@')[0].charAt(0).toUpperCase();
-                avatarDiv.textContent = initial;
-                
-                const infoDiv = document.createElement('div');
-                infoDiv.className = 'staff-info';
-                
-                const nameDiv = document.createElement('div');
-                nameDiv.className = 'staff-name';
-                nameDiv.textContent = email;
-                
-                const emailDiv = document.createElement('div');
-                emailDiv.className = 'staff-email';
-                emailDiv.textContent = `Email: ${email}`;
-                
-                const regDateDiv = document.createElement('div');
-                regDateDiv.className = 'staff-registration-date';
-                regDateDiv.textContent = `Registered on: ${formatDate(staffData.registrationDate)}`;
-                
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'staff-actions';
-                
-                const viewBtn = document.createElement('button');
-                viewBtn.className = 'btn btn-sm';
-                viewBtn.textContent = 'View Reports';
-                viewBtn.onclick = function() {
-                    switchView('daily');
-                    loadAllReports();
-                    document.getElementById('daily-reports-view').scrollIntoView({ behavior: 'smooth' });
-                };
-                
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn btn-sm back-btn';
-                deleteBtn.textContent = 'Delete Account';
-                deleteBtn.onclick = function() {
-                    if (confirm(`Are you sure you want to delete the account for ${email}?`)) {
-                        delete staffAccounts[email];
-                        localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
-                        loadStaffList();
-                        showMessage(document.getElementById('report-message'), `Account for ${email} has been deleted.`, 'success');
-                    }
-                };
-                
-                actionsDiv.appendChild(viewBtn);
-                actionsDiv.appendChild(deleteBtn);
-                
-                infoDiv.appendChild(nameDiv);
-                infoDiv.appendChild(emailDiv);
-                infoDiv.appendChild(regDateDiv);
-                
-                staffCard.appendChild(avatarDiv);
-                staffCard.appendChild(infoDiv);
-                staffCard.appendChild(actionsDiv);
-                
-                container.appendChild(staffCard);
-            });
-            
-            // Update pagination
-            updatePagination(totalPages);
-        }
-        
-        function updatePagination(totalPages) {
-            const pagination = document.getElementById('staff-pagination');
-            pagination.innerHTML = '';
-            
-            if (totalPages <= 1) {
-                pagination.style.display = 'none';
-                return;
-            }
-            
-            pagination.style.display = 'flex';
-            
-            // Previous button
-            const prevBtn = document.createElement('button');
-            prevBtn.textContent = 'Previous';
-            prevBtn.disabled = currentPage === 1;
-            prevBtn.onclick = function() {
-                if (currentPage > 1) {
-                    currentPage--;
-                    loadStaffList();
-                }
-            };
-            pagination.appendChild(prevBtn);
-            
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                const pageBtn = document.createElement('button');
-                pageBtn.textContent = i;
-                pageBtn.className = i === currentPage ? 'active' : '';
-                pageBtn.onclick = function() {
-                    currentPage = i;
-                    loadStaffList();
-                };
-                pagination.appendChild(pageBtn);
-            }
-            
-            // Next button
-            const nextBtn = document.createElement('button');
-            nextBtn.textContent = 'Next';
-            nextBtn.disabled = currentPage === totalPages;
-            nextBtn.onclick = function() {
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    loadStaffList();
-                }
-            };
-            pagination.appendChild(nextBtn);
-        }
-        
-        function changePage(direction) {
-            const totalPages = Math.ceil(Object.keys(staffAccounts).length / ITEMS_PER_PAGE);
-            if (direction === -1 && currentPage > 1) {
-                currentPage--;
-            } else if (direction === 1 && currentPage < totalPages) {
-                currentPage++;
-            }
-            loadStaffList();
-        }
-        
-        function searchStaff() {
-            const searchTerm = document.getElementById('staff-search').value.trim().toLowerCase();
-            const container = document.getElementById('staff-container');
-            container.innerHTML = '';
-            
-            // Filter staff based on search term
-            const filteredStaff = Object.keys(staffAccounts).filter(email => 
-                email.toLowerCase().includes(searchTerm)
-            );
-            
-            if (filteredStaff.length === 0) {
-                container.innerHTML = '<p>No matching staff found</p>';
-                return;
-            }
-            
-            // Display filtered staff
-            filteredStaff.forEach(email => {
-                const staffData = staffAccounts[email];
-                
-                const staffCard = document.createElement('div');
-                staffCard.className = 'staff-card';
-                
-                const avatarDiv = document.createElement('div');
-                avatarDiv.className = 'staff-avatar';
-                const initial = email.split('@')[0].charAt(0).toUpperCase();
-                avatarDiv.textContent = initial;
-                
-                const infoDiv = document.createElement('div');
-                infoDiv.className = 'staff-info';
-                
-                const nameDiv = document.createElement('div');
-                nameDiv.className = 'staff-name';
-                nameDiv.textContent = email;
-                
-                const emailDiv = document.createElement('div');
-                emailDiv.className = 'staff-email';
-                emailDiv.textContent = `Email: ${email}`;
-                
-                const regDateDiv = document.createElement('div');
-                regDateDiv.className = 'staff-registration-date';
-                regDateDiv.textContent = `Registered on: ${formatDate(staffData.registrationDate)}`;
-                
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'staff-actions';
-                
-                const viewBtn = document.createElement('button');
-                viewBtn.className = 'btn btn-sm';
-                viewBtn.textContent = 'View Reports';
-                viewBtn.onclick = function() {
-                    switchView('daily');
-                    loadAllReports();
-                    document.getElementById('daily-reports-view').scrollIntoView({ behavior: 'smooth' });
-                };
-                
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn btn-sm back-btn';
-                deleteBtn.textContent = 'Delete Account';
-                deleteBtn.onclick = function() {
-                    if (confirm(`Are you sure you want to delete the account for ${email}?`)) {
-                        delete staffAccounts[email];
-                        localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
-                        loadStaffList();
-                        showMessage(document.getElementById('report-message'), `Account for ${email} has been deleted.`, 'success');
-                    }
-                };
-                
-                actionsDiv.appendChild(viewBtn);
-                actionsDiv.appendChild(deleteBtn);
-                
-                infoDiv.appendChild(nameDiv);
-                infoDiv.appendChild(emailDiv);
-                infoDiv.appendChild(regDateDiv);
-                
-                staffCard.appendChild(avatarDiv);
-                staffCard.appendChild(infoDiv);
-                staffCard.appendChild(actionsDiv);
-                
-                container.appendChild(staffCard);
-            });
-        }
-        
-        // View switching function
-        function switchView(view) {
-            if (view === 'daily') {
-                document.getElementById('daily-reports-btn').classList.add('active');
-                document.getElementById('summary-reports-btn').classList.remove('active');
-                document.getElementById('staff-list-btn').classList.remove('active');
-                document.getElementById('daily-reports-view').classList.remove('hidden');
-                document.getElementById('summary-reports-view').classList.add('hidden');
-                document.getElementById('staff-list-view').classList.add('hidden');
-            } else if (view === 'summary') {
-                document.getElementById('daily-reports-btn').classList.remove('active');
-                document.getElementById('summary-reports-btn').classList.add('active');
-                document.getElementById('staff-list-btn').classList.remove('active');
-                document.getElementById('daily-reports-view').classList.add('hidden');
-                document.getElementById('summary-reports-view').classList.remove('hidden');
-                document.getElementById('staff-list-view').classList.add('hidden');
-                generateAISummary();
-            } else if (view === 'staff') {
-                document.getElementById('daily-reports-btn').classList.remove('active');
-                document.getElementById('summary-reports-btn').classList.remove('active');
-                document.getElementById('staff-list-btn').classList.add('active');
-                document.getElementById('daily-reports-view').classList.add('hidden');
-                document.getElementById('summary-reports-view').classList.add('hidden');
-                document.getElementById('staff-list-view').classList.remove('hidden');
-                loadStaffList();
+            // In a real app, you'd send this update to the server
+            const index = staffAccounts.findIndex(s => s.email === staffToEdit.email);
+            if (index !== -1) {
+                staffAccounts[index] = staffToEdit;
+                localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
+                alert('Staff account updated successfully!');
+                hideEditStaffModal();
+                loadStaffAccounts(); // Refresh the list
             }
         }
-        
-        // Utility functions
-        function isValidEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
+
+        function deleteStaffAccountConfirm(email) {
+            staffToDelete = email;
+            document.getElementById('delete-staff-confirm-modal').style.display = 'flex';
         }
-        
-        function isPasswordValid(password) {
-            return password.length >= 6 && /\d/.test(password) && /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+        function hideDeleteStaffConfirmModal() {
+            document.getElementById('delete-staff-confirm-modal').style.display = 'none';
+            staffToDelete = null;
         }
-        
-        function getCurrentIndiaTime() {
-            return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-        }
-        
-        function getIndiaTime() {
-            return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-        }
-        
-        function isAfter6PM() {
-            const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-            return now.getHours() >= 18;
-        }
-        
-        function hasReportToday(email) {
-            const today = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"})).toISOString().split('T')[0];
-            return reports.some(r => r.email === email && r.date === today);
-        }
-        
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-        }
-        
-        function showMessage(element, message, type) {
-            element.textContent = message;
-            element.className = `status-message ${type}`;
-            element.classList.remove('hidden');
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                element.classList.add('hidden');
-            }, 5000);
-        }
-        
-        function cleanOldReports() {
-            const fortyDaysAgo = new Date(getCurrentIndiaTime());
-            fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
-            
-            const initialCount = reports.length;
-            reports = reports.filter(report => {
-                const reportDate = new Date(report.date);
-                return reportDate >= fortyDaysAgo;
-            });
-            
-            if (initialCount !== reports.length) {
-                localStorage.setItem('reports', JSON.stringify(reports));
-            }
-        }
-        
-        function saveData() {
+
+        function deleteStaffAccount() {
+            if (!staffToDelete) return;
+
+            // Remove staff account
+            staffAccounts = staffAccounts.filter(staff => staff.email !== staffToDelete);
             localStorage.setItem('staffAccounts', JSON.stringify(staffAccounts));
-            localStorage.setItem('reports', JSON.stringify(reports));
+
+            // Remove all reports associated with this staff
+            dailyReports = dailyReports.filter(report => report.email !== staffToDelete);
+            localStorage.setItem('dailyReports', JSON.stringify(dailyReports));
+
+            alert(`Staff account ${staffToDelete} and all their reports deleted successfully.`);
+            hideDeleteStaffConfirmModal();
+            loadStaffAccounts(); // Refresh staff list
+            loadAllReports(); // Refresh all reports list
+            staffToDelete = null;
         }
-        
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
-            showLoginScreen();
-        });
+
+
+        function toggleReportView(view) {
+            const listView = document.getElementById('all-reports-list');
+            const summaryView = document.getElementById('all-reports-summary');
+            const listButton = document.querySelector('.view-toggle button:nth-child(1)');
+            const summaryButton = document.querySelector('.view-toggle button:nth-child(2)');
+
+            if (view === 'list') {
+                listView.classList.remove('hidden');
+                summaryView.classList.add('hidden');
+                listButton.classList.add('active');
+                summaryButton.classList.remove('active');
+            } else {
+                listView.classList.add('hidden');
+                summaryView.classList.remove('hidden');
+                listButton.classList.remove('active');
+                summaryButton.classList.add('active');
+            }
+            loadAllReports(currentReportsPage, view); // Reload reports in the selected view
+        }
+
+        function loadAllReports(page = 1, view = null) {
+            currentReportsPage = page;
+            const allReportsList = document.getElementById('all-reports-list');
+            const allReportsSummary = document.getElementById('all-reports-summary');
+            const reportPaginationDiv = document.getElementById('report-pagination');
+            allReportsList.innerHTML = '';
+            allReportsSummary.innerHTML = '';
+            reportPaginationDiv.innerHTML = '';
+
+            // Sort reports by date descending, then by email for consistency
+            const sortedReports = [...dailyReports].sort((a, b) => {
+                const dateA = new Date(b.date);
+                const dateB = new Date(a.date);
+                if (dateA - dateB !== 0) {
+                    return dateA - dateB;
+                }
+                return a.email.localeCompare(b.email); // Secondary sort by email
+            });
+
+            // Filter out reports older than 30 days
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            const filteredAndSortedReports = sortedReports.filter(report => new Date(report.date) >= thirtyDaysAgo);
+
+            // Automatically delete older reports (simulated cleanup)
+            if (filteredAndSortedReports.length < dailyReports.length) {
+                dailyReports = filteredAndSortedReports;
+                localStorage.setItem('dailyReports', JSON.stringify(dailyReports));
+            }
+
+
+            const startIndex = (currentReportsPage - 1) * REPORTS_PAGE_SIZE;
+            const endIndex = startIndex + REPORTS_PAGE_SIZE;
+            const paginatedReports = filteredAndSortedReports.slice(startIndex, endIndex);
+
+            if (paginatedReports.length === 0) {
+                allReportsList.innerHTML = '<p style="text-align: center; color: #666;">No reports found.</p>';
+                allReportsSummary.innerHTML = '<p style="text-align: center; color: #666;">No reports found.</p>';
+                return;
+            }
+
+            // Determine active view
+            const activeViewButton = document.querySelector('.view-toggle button.active');
+            const currentView = view || (activeViewButton ? activeViewButton.textContent.toLowerCase().includes('list') ? 'list' : 'summary' : 'list');
+
+
+            paginatedReports.forEach(report => {
+                const staff = staffAccounts.find(s => s.email === report.email);
+                const staffDisplayName = staff ? staff.email : report.email; // Fallback to email if account not found (deleted)
+                const reportDateFormatted = new Date(report.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+
+                // List View Item
+                const listItem = document.createElement('div');
+                listItem.classList.add('report-item');
+                listItem.innerHTML = `
+                    <div class="report-date"><strong>${staffDisplayName}</strong> - ${reportDateFormatted}</div>
+                    <div class="report-content">
+                        ${report.marketing ? `<strong>Marketing:</strong> ${report.marketing}<br>` : ''}
+                        ${report.collection ? `<strong>Collection:</strong> ${report.collection}<br>` : ''}
+                        ${report.commission ? `<strong>Commission Received:</strong> ${report.commission}<br>` : ''}
+                        ${report.accounts ? `<strong>Accounts:</strong> ${report.accounts}<br>` : ''}
+                    </div>
+                    <div class="staff-actions" style="justify-content: flex-end; margin-top: 10px;">
+                        <button class="btn btn-sm" onclick="showViewReportModal(${report.id})">View</button>
+                        <button class="btn btn-sm" style="background-color: #dc3545;" onclick="deleteReportConfirm(${report.id})">Delete</button>
+                    </div>
+                `;
+                allReportsList.appendChild(listItem);
+
+                // Summary View Item
+                const summaryCard = document.createElement('div');
+                summaryCard.classList.add('summary-card');
+                summaryCard.innerHTML = `
+                    <div class="summary-employee">${staffDisplayName}</div>
+                    <div class="summary-date">${reportDateFormatted}</div>
+                    <div class="summary-content">
+                        ${report.marketing ? `<div class="summary-section"><div class="summary-section-title">Marketing:</div> ${report.marketing}</div>` : ''}
+                        ${report.collection ? `<div class="summary-section"><div class="summary-section-title">Collection:</div> ${report.collection}</div>` : ''}
+                        ${report.commission ? `<div class="summary-section"><div class="summary-section-title">Commission:</div> ${report.commission}</div>` : ''}
+                        ${report.accounts ? `<div class="summary-section"><div class="summary-section-title">Accounts:</div> ${report.accounts}</div>` : ''}
+                    </div>
+                    <div class="staff-actions" style="justify-content: flex-end; margin-top: 10px;">
+                        <button class="btn btn-sm" onclick="showViewReportModal(${report.id})">View</button>
+                        <button class="btn btn-sm" style="background-color: #dc3545;" onclick="deleteReportConfirm(${report.id})">Delete</button>
+                    </div>
+                `;
+                allReportsSummary.appendChild(summaryCard);
+            });
+
+            if (currentView === 'list') {
+                allReportsList.classList.remove('hidden');
+                allReportsSummary.classList.add('hidden');
+            } else {
+                allReportsList.classList.add('hidden');
+                allReportsSummary.classList.remove('hidden');
+            }
+
+
+            // Pagination buttons
+            const totalPages = Math.ceil(filteredAndSortedReports.length / REPORTS_PAGE_SIZE);
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.classList.toggle('active', i === currentReportsPage);
+                button.onclick = () => loadAllReports(i, currentView);
+                reportPaginationDiv.appendChild(button);
+            }
+        }
+
+        let reportToView = null;
+        let reportToDeleteId = null;
+
+        function showViewReportModal(reportId) {
+            reportToView = dailyReports.find(r => r.id === reportId);
+            if (reportToView) {
+                const modalTitle = document.getElementById('view-report-title');
+                const modalBody = document.getElementById('view-report-body');
+                
+                const staff = staffAccounts.find(s => s.email === reportToView.email);
+                const staffDisplayName = staff ? staff.email : reportToView.email + ' (Account Deleted)';
+                const reportDateFormatted = new Date(reportToView.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                modalTitle.textContent = `Report by ${staffDisplayName} on ${reportDateFormatted}`;
+                modalBody.innerHTML = `
+                    ${reportToView.marketing ? `<p><strong>Marketing:</strong><br>${reportToView.marketing}</p>` : ''}
+                    ${reportToView.collection ? `<p><strong>Collection:</strong><br>${reportToView.collection}</p>` : ''}
+                    ${reportToView.commission ? `<p><strong>Commission Received:</strong><br>${reportToView.commission}</p>` : ''}
+                    ${reportToView.accounts ? `<p><strong>Accounts:</strong><br>${reportToView.accounts}</p>` : ''}
+                `;
+                document.getElementById('view-report-modal').style.display = 'flex';
+            }
+        }
+
+        function hideViewReportModal() {
+            document.getElementById('view-report-modal').style.display = 'none';
+            reportToView = null;
+        }
+
+        function deleteReportConfirm(reportId) {
+            reportToDeleteId = reportId;
+            document.getElementById('delete-report-confirm-modal').style.display = 'flex';
+        }
+
+        function hideDeleteReportConfirmModal() {
+            document.getElementById('delete-report-confirm-modal').style.display = 'none';
+            reportToDeleteId = null;
+        }
+
+        function deleteReport() {
+            if (reportToDeleteId === null) return;
+
+            dailyReports = dailyReports.filter(report => report.id !== reportToDeleteId);
+            localStorage.setItem('dailyReports', JSON.stringify(dailyReports));
+
+            alert('Report deleted successfully.');
+            hideDeleteReportConfirmModal();
+            loadAllReports(currentReportsPage); // Reload owner reports after deletion
+            if (currentUser && !ownerLoggedIn) { // If a staff member deleted their own report
+                loadStaffReports(currentUser.email);
+            }
+            reportToDeleteId = null;
+        }
     </script>
 </body>
 </html>
