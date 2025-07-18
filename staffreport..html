@@ -1,31 +1,3 @@
-Okay, I understand. You want to consolidate both your staff accounts and daily reports into a single JSONBin.io bin with the ID `687a90b474f7b01b5c73b07f`.
-
-I have updated the `STAFF_BIN_ID` and `REPORTS_BIN_ID` constants in the HTML/JavaScript code to use this new single ID.
-
-**Important Instructions for Your JSONBin.io Setup:**
-
-Since you are now using **one bin for both types of data**, its initial content structure is critical for the application to work correctly.
-
-1.  **Log in to your JSONBin.io account.**
-2.  **Ensure you have a bin with the ID: `687a90b474f7b01b5c73b07f`.**
-      * If it doesn't exist, create a **new private bin** and set its ID to `687a90b474f7b01b5c73b07f`.
-      * **The initial content of this specific bin (ID: `687a90b474f7b01b5c73b07f`) MUST be exactly as follows:**
-        ```json
-        {
-          "accounts": [],
-          "reports": []
-        }
-        ```
-        This ensures the code can find both the `accounts` array for staff and the `reports` array for daily entries. If the bin is empty or has incorrect JSON, you will encounter errors.
-3.  **Verify your Master Key:** Double-check that the `JSONBIN_SECRET_KEY` in the code below (`$2a$10$vlNz95xI2evMW5E0BuhuoOF/yLfLgu/ZAN0c.ats6IvyeJKseTMgK`) exactly matches your JSONBin.io Master Key, and that this key has **both read and write permissions** enabled.
-
-Once you have verified the bin ID, its initial content, and your Master Key on JSONBin.io, replace your existing `staffreport.html` file content with the code below, then refresh your website.
-
-If you still encounter issues, please open your browser's **Developer Console (F12)** and check the "Console" tab for any red error messages. These messages will provide more specific details about what might be going wrong with the connection to JSONBin.io.
-
-Here is the updated HTML code:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1987,4 +1959,3 @@ Here is the updated HTML code:
     </script>
 </body>
 </html>
-```
