@@ -848,9 +848,9 @@
 
     <script>
         // *** IMPORTANT: YOUR JSONBin.io KEYS AND IDs ARE SET HERE ***
-        const JSONBIN_SECRET_KEY = '$2a$10$vlNz95xI2evMW5E0BuhuoOF/yLfLgu/ZAN0c.ats6IvyeJKseTMgK';
-        const STAFF_BIN_ID = '687a8a004aa8c42c4e87388b';
-        const REPORTS_BIN_ID = '687a894411538d600f2aeba6';
+        const JSONBIN_SECRET_KEY = '$2a$10$vlNz95xI2evMW5E0BuhuoOF/yLfLgu/ZAN0c.ats6IvyeJKseTMgK'; // Your Secret Key
+        const STAFF_BIN_ID = '687a8a004aa8c42c4e87388b'; // Your staff accounts bin ID
+        const REPORTS_BIN_ID = '687a894411538d600f2aeba6'; // Your daily reports bin ID
         // **************************************************************************
 
         const JSONBIN_API_URL = 'https://api.jsonbin.io/v3/b/';
@@ -860,9 +860,9 @@
         let staffAccounts = []; // Will be loaded from JSONBin
         let dailyReports = [];  // Will be loaded from JSONBin
         
-        // Owner credentials (for demonstration purposes only) - These are NOT stored on JSONBin for simplicity
+        // Owner credentials (for demonstration purposes only) - These are NOT secure for real apps!
         const OWNER_EMAIL = "owner@shreehari.com";
-        const OWNER_PASSWORD = "adminpassword"; // In a real app, use hashed passwords!
+        const OWNER_PASSWORD = "adminpassword"; // In a real app, use hashed passwords and a proper backend!
 
         // Pagination settings
         const STAFF_PAGE_SIZE = 5;
@@ -871,19 +871,27 @@
         let currentReportsPage = 1;
 
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log("DOM Content Loaded. Initializing...");
             // Display current date on staff dashboard
             const today = new Date();
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('current-date').textContent = `Today: ${today.toLocaleDateString('en-US', options)}`;
+            const currentDateElement = document.getElementById('current-date');
+            if (currentDateElement) {
+                currentDateElement.textContent = `Today: ${today.toLocaleDateString('en-US', options)}`;
+            } else {
+                console.warn("Element with ID 'current-date' not found.");
+            }
 
             checkSubmissionTime();
             setInterval(checkSubmissionTime, 60000); // Check every minute
             
             await loadAllData(); // Load all data from JSONBin when the page loads
             showLoginScreen(); // Start with the login screen
+            console.log("Initialization complete. Showing login screen.");
         });
 
         async function fetchBinData(binId) {
+            console.log(`Attempting to fetch data from bin: ${binId}`);
             try {
                 const response = await fetch(`${JSONBIN_API_URL}${binId}`, {
                     headers: {
@@ -892,18 +900,26 @@
                     }
                 });
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error(`Error fetching data from bin ${binId}. Status: ${response.status} ${response.statusText}. Response Body:`, errorText);
+                    throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}. Check console for details.`);
                 }
                 const data = await response.json();
-                return data.record; // JSONBin wraps data in a 'record' property
+                if (!data || !data.record) {
+                    console.error(`Unexpected data structure from bin ${binId}:`, data);
+                    throw new Error('Invalid data structure received from JSONBin.io. Expected a "record" property.');
+                }
+                console.log(`Successfully fetched data from bin ${binId}.`);
+                return data.record;
             } catch (error) {
-                console.error(`Error fetching data from bin ${binId}:`, error);
-                alert(`Error loading data. Please check console. Is JSONBin.io setup correctly and are your keys/IDs correct?`);
+                console.error(`Exception during fetchBinData for bin ${binId}:`, error);
+                alert(`Error loading data from JSONBin.io for bin ${binId}. Please check your browser's console (F12) for detailed errors. Ensure your bin exists, its initial content is correct (e.g., {"accounts": []}), and your Secret Key is valid and has read permissions.`);
                 return null;
             }
         }
 
         async function updateBinData(binId, data) {
+            console.log(`Attempting to update data in bin: ${binId} with data:`, data);
             try {
                 const response = await fetch(`${JSONBIN_API_URL}${binId}`, {
                     method: 'PUT',
@@ -915,24 +931,33 @@
                     body: JSON.stringify(data)
                 });
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error(`Error updating data in bin ${binId}. Status: ${response.status} ${response.statusText}. Response Body:`, errorText);
+                    throw new Error(`Failed to update data: ${response.status} ${response.statusText}. Check console for details.`);
                 }
                 const result = await response.json();
+                if (!result || !result.record) {
+                     console.error(`Unexpected data structure after updating bin ${binId}:`, result);
+                     throw new Error('Invalid response structure after updating JSONBin.io. Expected a "record" property.');
+                }
+                console.log(`Successfully updated data in bin ${binId}.`);
                 return result.record;
             } catch (error) {
-                console.error(`Error updating data in bin ${binId}:`, error);
-                alert(`Error saving data. Please check console.`);
+                console.error(`Exception during updateBinData for bin ${binId}:`, error);
+                alert(`Error saving data to JSONBin.io for bin ${binId}. Please check your browser's console (F12) for detailed errors. Ensure your Secret Key is valid and has write permissions.`);
                 return null;
             }
         }
 
         async function loadAllData() {
+            console.log("Loading all data from JSONBin.io...");
             const staffData = await fetchBinData(STAFF_BIN_ID);
             staffAccounts = (staffData && staffData.accounts) || [];
+            console.log("Staff accounts loaded:", staffAccounts);
 
             const reportsData = await fetchBinData(REPORTS_BIN_ID);
             dailyReports = (reportsData && reportsData.reports) || [];
-            console.log("Data loaded:", { staffAccounts, dailyReports });
+            console.log("Daily reports loaded:", dailyReports);
         }
 
         function checkSubmissionTime() {
@@ -942,44 +967,57 @@
             const timeNotice = document.getElementById('time-notice');
             const submitButton = document.querySelector('#staff-dashboard .report-section .btn');
 
-            if (hour >= 18) { // 6 PM (18:00)
-                timeNotice.classList.add('hidden');
-                submitButton.removeAttribute('disabled');
+            if (timeNotice && submitButton) {
+                if (hour >= 18) { // 6 PM (18:00)
+                    timeNotice.classList.add('hidden');
+                    submitButton.removeAttribute('disabled');
+                } else {
+                    timeNotice.classList.remove('hidden');
+                    submitButton.setAttribute('disabled', 'true');
+                }
             } else {
-                timeNotice.classList.remove('hidden');
-                submitButton.setAttribute('disabled', 'true');
+                console.warn("Time notice or submit button element not found on staff dashboard.");
             }
         }
 
         function showForm(formId) {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('create-account').classList.add('hidden');
-            document.getElementById('staff-login').classList.add('hidden');
-            document.getElementById('owner-login').classList.add('hidden');
-            document.getElementById('staff-dashboard').classList.add('hidden');
-            document.getElementById('owner-dashboard').classList.add('hidden');
+            console.log(`Showing form: ${formId}`);
+            // Safely hide all potential screens
+            const screens = ['login-screen', 'create-account', 'staff-login', 'owner-login', 'staff-dashboard', 'owner-dashboard'];
+            screens.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.classList.add('hidden');
+                } else {
+                    console.warn(`Element with ID '${id}' not found when trying to hide forms.`);
+                }
+            });
 
-            document.getElementById(formId).classList.remove('hidden');
+            const targetForm = document.getElementById(formId);
+            if (targetForm) {
+                targetForm.classList.remove('hidden');
+            } else {
+                console.error(`Target form with ID '${formId}' not found.`);
+            }
             clearMessages(); // Clear any previous messages
         }
 
         async function showLoginScreen() {
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('create-account').classList.add('hidden');
-            document.getElementById('staff-login').classList.add('hidden');
-            document.getElementById('owner-login').classList.add('hidden');
-            document.getElementById('staff-dashboard').classList.add('hidden');
-            document.getElementById('owner-dashboard').classList.add('hidden');
+            console.log("Showing login screen and resetting state.");
+            showForm('login-screen'); // This handles hiding all others and showing login-screen
             currentUser = null;
             ownerLoggedIn = false;
             clearMessages();
-            // Clear input fields
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('staff-email').value = '';
-            document.getElementById('staff-password').value = '';
-            document.getElementById('owner-email').value = '';
-            document.getElementById('owner-password').value = '';
+            // Clear input fields safely
+            const inputsToClear = ['email', 'password', 'staff-email', 'staff-password', 'owner-email', 'owner-password'];
+            inputsToClear.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.value = '';
+                } else {
+                    console.warn(`Input element with ID '${id}' not found when clearing fields.`);
+                }
+            });
 
             await loadAllData(); // Ensure latest data is loaded when returning to login
         }
@@ -995,16 +1033,31 @@
 
         function showMessage(elementId, message, type) {
             const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.classList.remove('hidden', 'success', 'error', 'warning');
-            element.classList.add(type);
+            if (element) {
+                element.textContent = message;
+                element.classList.remove('hidden', 'success', 'error', 'warning');
+                element.classList.add(type);
+            } else {
+                console.warn(`Message element with ID '${elementId}' not found.`);
+            }
         }
 
         // --- Account Management (using JSONBin.io) ---
         async function createAccount() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
+            console.log("Attempting to create account...");
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
             const accountMessage = document.getElementById('account-message');
+
+            if (!emailInput || !passwordInput || !accountMessage) {
+                console.error("Missing DOM elements for create account form.");
+                alert("An internal error occurred. Please refresh the page.");
+                return;
+            }
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            
 
             clearMessages();
 
@@ -1031,20 +1084,30 @@
             
             if (updated) {
                 showMessage('account-message', 'Staff account created successfully! You can now login.', 'success');
-                document.getElementById('email').value = '';
-                document.getElementById('password').value = '';
+                emailInput.value = '';
+                passwordInput.value = '';
                 loadStaffAccounts(); // Refresh staff list for owner
             } else {
-                showMessage('account-message', 'Failed to create account. Please try again.', 'error');
+                showMessage('account-message', 'Failed to create account. Please try again. Check console for API errors.', 'error');
                 // Revert local staffAccounts if update failed
                 staffAccounts.pop();
             }
         }
 
         async function staffLogin() {
-            const email = document.getElementById('staff-email').value.trim();
-            const password = document.getElementById('staff-password').value.trim();
+            console.log("Attempting staff login...");
+            const emailInput = document.getElementById('staff-email');
+            const passwordInput = document.getElementById('staff-password');
             const loginMessage = document.getElementById('staff-login-message');
+
+            if (!emailInput || !passwordInput || !loginMessage) {
+                console.error("Missing DOM elements for staff login form.");
+                alert("An internal error occurred. Please refresh the page.");
+                return;
+            }
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
 
             clearMessages();
             await loadAllData(); // Fetch latest staff accounts
@@ -1066,9 +1129,19 @@
         }
 
         async function ownerLogin() {
-            const email = document.getElementById('owner-email').value.trim();
-            const password = document.getElementById('owner-password').value.trim();
+            console.log("Attempting owner login...");
+            const emailInput = document.getElementById('owner-email');
+            const passwordInput = document.getElementById('owner-password');
             const loginMessage = document.getElementById('owner-login-message');
+
+            if (!emailInput || !passwordInput || !loginMessage) {
+                console.error("Missing DOM elements for owner login form.");
+                alert("An internal error occurred. Please refresh the page.");
+                return;
+            }
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
 
             clearMessages();
             await loadAllData(); // Fetch latest reports and accounts for owner view
@@ -1094,26 +1167,41 @@
 
         // --- Staff Dashboard Functions ---
         function clearReportForm() {
-            document.getElementById('marketing-content').value = '';
-            document.getElementById('collection-content').value = '';
-            document.getElementById('commission-content').value = '';
-            document.getElementById('accounts-content').value = '';
-            document.getElementById('edit-report-container').classList.add('hidden');
-            document.getElementById('edit-marketing-content').value = '';
-            document.getElementById('edit-collection-content').value = '';
-            document.getElementById('edit-commission-content').value = '';
-            document.getElementById('edit-accounts-content').value = '';
+            const marketing = document.getElementById('marketing-content');
+            const collection = document.getElementById('collection-content');
+            const commission = document.getElementById('commission-content');
+            const accounts = document.getElementById('accounts-content');
+            const editContainer = document.getElementById('edit-report-container');
+            const editMarketing = document.getElementById('edit-marketing-content');
+            const editCollection = document.getElementById('edit-collection-content');
+            const editCommission = document.getElementById('edit-commission-content');
+            const editAccounts = document.getElementById('edit-accounts-content');
+
+            if (marketing) marketing.value = '';
+            if (collection) collection.value = '';
+            if (commission) commission.value = '';
+            if (accounts) accounts.value = '';
+            if (editContainer) editContainer.classList.add('hidden');
+            if (editMarketing) editMarketing.value = '';
+            if (editCollection) editCollection.value = '';
+            if (editCommission) editCommission.value = '';
+            if (editAccounts) editAccounts.value = '';
         }
 
         function showConfirmModal() {
-            document.getElementById('confirm-modal').style.display = 'flex';
+            const modal = document.getElementById('confirm-modal');
+            if (modal) modal.style.display = 'flex';
+            else console.warn("Confirm modal not found.");
         }
 
         function hideConfirmModal() {
-            document.getElementById('confirm-modal').style.display = 'none';
+            const modal = document.getElementById('confirm-modal');
+            if (modal) modal.style.display = 'none';
+            else console.warn("Confirm modal not found.");
         }
 
         async function submitReport() {
+            console.log("Attempting to submit report...");
             hideConfirmModal();
 
             if (!currentUser) {
@@ -1122,10 +1210,21 @@
                 return;
             }
 
-            const marketing = document.getElementById('marketing-content').value.trim();
-            const collection = document.getElementById('collection-content').value.trim();
-            const commission = document.getElementById('commission-content').value.trim();
-            const accounts = document.getElementById('accounts-content').value.trim();
+            const marketingInput = document.getElementById('marketing-content');
+            const collectionInput = document.getElementById('collection-content');
+            const commissionInput = document.getElementById('commission-content');
+            const accountsInput = document.getElementById('accounts-content');
+
+            if (!marketingInput || !collectionInput || !commissionInput || !accountsInput) {
+                console.error("Missing DOM elements for report submission.");
+                alert("An internal error occurred. Please refresh the page.");
+                return;
+            }
+
+            const marketing = marketingInput.value.trim();
+            const collection = collectionInput.value.trim();
+            const commission = commissionInput.value.trim();
+            const accounts = accountsInput.value.trim();
 
             if (!marketing && !collection && !commission && !accounts) {
                 alert('At least one section must be filled to submit a report.');
@@ -1164,14 +1263,19 @@
                 loadStaffReports(currentUser.email); // Reload past reports for staff
                 loadAllReports(); // Reload all reports for owner
             } else {
-                alert('Failed to submit report. Please try again.');
+                alert('Failed to submit report. Please try again. Check console for API errors.');
                 dailyReports.pop(); // Revert local change if update failed
             }
         }
 
         async function loadStaffReports(email) {
+            console.log(`Loading reports for staff: ${email}`);
             await loadAllData(); // Ensure latest reports are fetched
             const pastReportsList = document.getElementById('past-reports-list');
+            if (!pastReportsList) {
+                console.warn("Element with ID 'past-reports-list' not found.");
+                return;
+            }
             pastReportsList.innerHTML = '';
 
             const staffReports = dailyReports
@@ -1200,6 +1304,7 @@
         }
 
         async function editReport() {
+            console.log("Attempting to edit report...");
             if (!currentUser) {
                 alert('Error: No staff member logged in.');
                 showLoginScreen();
@@ -1211,6 +1316,12 @@
             await loadAllData(); // Fetch latest reports
             const existingReport = dailyReports.find(r => r.email === currentUser.email && r.date === reportDate);
             const editContainer = document.getElementById('edit-report-container');
+
+            if (!editContainer) {
+                console.error("Edit report container element not found.");
+                alert("An internal error occurred. Please refresh the page.");
+                return;
+            }
 
             if (existingReport) {
                 editContainer.classList.remove('hidden');
@@ -1225,6 +1336,7 @@
         }
 
         async function updateReport() {
+            console.log("Attempting to update report...");
             if (!currentUser) {
                 alert('Error: No staff member logged in.');
                 showLoginScreen();
@@ -1241,10 +1353,21 @@
                 return;
             }
 
-            const marketing = document.getElementById('edit-marketing-content').value.trim();
-            const collection = document.getElementById('edit-collection-content').value.trim();
-            const commission = document.getElementById('edit-commission-content').value.trim();
-            const accounts = document.getElementById('edit-accounts-content').value.trim();
+            const marketingInput = document.getElementById('edit-marketing-content');
+            const collectionInput = document.getElementById('edit-collection-content');
+            const commissionInput = document.getElementById('edit-commission-content');
+            const accountsInput = document.getElementById('edit-accounts-content');
+
+            if (!marketingInput || !collectionInput || !commissionInput || !accountsInput) {
+                console.error("Missing DOM elements for report update.");
+                alert("An internal error occurred. Please refresh the page.");
+                return;
+            }
+
+            const marketing = marketingInput.value.trim();
+            const collection = collectionInput.value.trim();
+            const commission = commissionInput.value.trim();
+            const accounts = accountsInput.value.trim();
 
             if (!marketing && !collection && !commission && !accounts) {
                 alert('At least one section must be filled to update the report.');
@@ -1260,11 +1383,12 @@
             const updated = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
             if (updated) {
                 alert('Daily report updated successfully!');
-                document.getElementById('edit-report-container').classList.add('hidden');
+                const editContainer = document.getElementById('edit-report-container');
+                if (editContainer) editContainer.classList.add('hidden');
                 loadStaffReports(currentUser.email);
                 loadAllReports();
             } else {
-                alert('Failed to update report. Please try again.');
+                alert('Failed to update report. Please try again. Check console for API errors.');
                 // Handle reversion if update fails
             }
         }
@@ -1272,14 +1396,23 @@
         // --- Owner Dashboard Functions ---
 
         async function loadStaffAccounts(page = 1) {
+            console.log(`Loading staff accounts, page: ${page}`);
             currentStaffPage = page;
             await loadAllData(); // Fetch latest staff accounts
             const staffListDiv = document.getElementById('staff-list');
-            staffListDiv.innerHTML = '';
             const staffPaginationDiv = document.getElementById('staff-pagination');
+
+            if (!staffListDiv || !staffPaginationDiv) {
+                console.error("Missing DOM elements for staff accounts list or pagination.");
+                return;
+            }
+
+            staffListDiv.innerHTML = '';
             staffPaginationDiv.innerHTML = '';
 
-            const searchTerm = document.getElementById('staff-search').value.toLowerCase();
+            const staffSearchInput = document.getElementById('staff-search');
+            const searchTerm = staffSearchInput ? staffSearchInput.value.toLowerCase() : '';
+            
             const filteredStaff = staffAccounts.filter(staff =>
                 staff.email.toLowerCase().includes(searchTerm) ||
                 (staff.name && staff.name.toLowerCase().includes(searchTerm))
@@ -1333,26 +1466,49 @@
         let staffToDelete = null;
 
         async function showEditStaffModal(email) {
+            console.log(`Showing edit staff modal for: ${email}`);
             await loadAllData(); // Ensure latest staff data
             staffToEdit = staffAccounts.find(staff => staff.email === email);
+            const editStaffEmail = document.getElementById('edit-staff-email');
+            const editStaffPassword = document.getElementById('edit-staff-password');
+            const editStaffModal = document.getElementById('edit-staff-modal');
+
+            if (!editStaffEmail || !editStaffPassword || !editStaffModal) {
+                console.error("Missing DOM elements for edit staff modal.");
+                alert("An internal error occurred. Please refresh the page.");
+                return;
+            }
+
             if (staffToEdit) {
-                document.getElementById('edit-staff-email').value = staffToEdit.email;
-                document.getElementById('edit-staff-password').value = '';
-                document.getElementById('edit-staff-modal').style.display = 'flex';
+                editStaffEmail.value = staffToEdit.email;
+                editStaffPassword.value = ''; // Always clear password field for security
+                editStaffModal.style.display = 'flex';
+            } else {
+                console.warn(`Staff with email ${email} not found for editing.`);
             }
         }
 
         function hideEditStaffModal() {
-            document.getElementById('edit-staff-modal').style.display = 'none';
+            const modal = document.getElementById('edit-staff-modal');
+            if (modal) modal.style.display = 'none';
             staffToEdit = null;
         }
 
         async function updateStaffAccount() {
-            if (!staffToEdit) return;
+            console.log("Attempting to update staff account...");
+            if (!staffToEdit) {
+                console.error("No staff account selected for editing.");
+                return;
+            }
 
-            const newPassword = document.getElementById('edit-staff-password').value.trim();
-            // No specific message element for this modal in your original HTML. Using alert.
-
+            const newPasswordInput = document.getElementById('edit-staff-password');
+            if (!newPasswordInput) {
+                console.error("Missing password input for staff update.");
+                alert("An internal error occurred. Please refresh the page.");
+                return;
+            }
+            const newPassword = newPasswordInput.value.trim();
+            
             if (newPassword) {
                 const passwordRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{6,}$/;
                 if (!passwordRegex.test(newPassword)) {
@@ -1365,30 +1521,41 @@
             await loadAllData(); // Fetch latest staff accounts before updating
             const index = staffAccounts.findIndex(s => s.email === staffToEdit.email);
             if (index !== -1) {
-                staffAccounts[index] = staffToEdit;
+                staffAccounts[index] = staffToEdit; // Update the object in the array
                 const updated = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
                 if (updated) {
                     alert('Staff account updated successfully!');
                     hideEditStaffModal();
                     loadStaffAccounts();
                 } else {
-                    alert('Failed to update staff account. Please try again.');
+                    alert('Failed to update staff account. Please try again. Check console for API errors.');
                 }
+            } else {
+                console.error(`Staff account with email ${staffToEdit.email} not found in current data for update.`);
+                alert("Staff account not found. It might have been deleted by another owner. Please refresh.");
             }
         }
 
         function deleteStaffAccountConfirm(email) {
+            console.log(`Confirming deletion for staff: ${email}`);
             staffToDelete = email;
-            document.getElementById('delete-staff-confirm-modal').style.display = 'flex';
+            const modal = document.getElementById('delete-staff-confirm-modal');
+            if (modal) modal.style.display = 'flex';
+            else console.warn("Delete staff confirm modal not found.");
         }
 
         function hideDeleteStaffConfirmModal() {
-            document.getElementById('delete-staff-confirm-modal').style.display = 'none';
+            const modal = document.getElementById('delete-staff-confirm-modal');
+            if (modal) modal.style.display = 'none';
             staffToDelete = null;
         }
 
         async function deleteStaffAccount() {
-            if (!staffToDelete) return;
+            console.log(`Attempting to delete staff: ${staffToDelete}`);
+            if (!staffToDelete) {
+                console.error("No staff account selected for deletion.");
+                return;
+            }
 
             await loadAllData(); // Fetch latest data before deletion
 
@@ -1400,7 +1567,7 @@
             const staffUpdated = await updateBinData(STAFF_BIN_ID, { accounts: staffAccounts });
 
             if (!staffUpdated) {
-                alert('Failed to delete staff account. Please try again.');
+                alert('Failed to delete staff account. Please try again. Check console for API errors.');
                 staffAccounts = originalStaffAccounts; // Revert
                 return;
             }
@@ -1410,7 +1577,7 @@
             const reportsUpdated = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
 
             if (!reportsUpdated) {
-                alert('Staff account deleted, but failed to delete associated reports. Please manually clean up reports.');
+                alert('Staff account deleted, but failed to delete associated reports. Please manually clean up reports. Check console for API errors.');
                 dailyReports = originalDailyReports; // Revert reports only
                 // Note: In a real backend, this would be a single, transactional operation.
             } else {
@@ -1425,10 +1592,16 @@
 
 
         function toggleReportView(view) {
+            console.log(`Toggling report view to: ${view}`);
             const listView = document.getElementById('all-reports-list');
             const summaryView = document.getElementById('all-reports-summary');
             const listButton = document.querySelector('.view-toggle button:nth-child(1)');
             const summaryButton = document.querySelector('.view-toggle button:nth-child(2)');
+
+            if (!listView || !summaryView || !listButton || !summaryButton) {
+                console.error("Missing DOM elements for report view toggle.");
+                return;
+            }
 
             if (view === 'list') {
                 listView.classList.remove('hidden');
@@ -1445,11 +1618,18 @@
         }
 
         async function loadAllReports(page = 1, view = null) {
+            console.log(`Loading all reports, page: ${page}, view: ${view}`);
             currentReportsPage = page;
             await loadAllData(); // Fetch latest reports
             const allReportsList = document.getElementById('all-reports-list');
             const allReportsSummary = document.getElementById('all-reports-summary');
             const reportPaginationDiv = document.getElementById('report-pagination');
+
+            if (!allReportsList || !allReportsSummary || !reportPaginationDiv) {
+                console.error("Missing DOM elements for all reports list, summary, or pagination.");
+                return;
+            }
+
             allReportsList.innerHTML = '';
             allReportsSummary.innerHTML = '';
             reportPaginationDiv.innerHTML = '';
@@ -1470,8 +1650,11 @@
             dailyReports = sortedReports.filter(report => new Date(report.date) >= thirtyDaysAgo);
 
             if (dailyReports.length < initialReportsCount) {
-                console.log("Deleting older reports from JSONBin...");
-                await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+                console.log("Detected older reports. Attempting to delete them from JSONBin...");
+                const deleteResult = await updateBinData(REPORTS_BIN_ID, { reports: dailyReports });
+                if (!deleteResult) {
+                    console.error("Failed to prune old reports from JSONBin. You may need to manually clean old data if this persists.");
+                }
             }
 
             const filteredAndSortedReports = dailyReports; // Use the potentially cleaned list
@@ -1553,12 +1736,20 @@
         let reportToDeleteId = null;
 
         async function showViewReportModal(reportId) {
+            console.log(`Showing view report modal for ID: ${reportId}`);
             await loadAllData(); // Ensure latest reports
             reportToView = dailyReports.find(r => r.id === reportId);
+            const modalTitle = document.getElementById('view-report-title');
+            const modalBody = document.getElementById('view-report-body');
+            const viewReportModal = document.getElementById('view-report-modal');
+
+            if (!modalTitle || !modalBody || !viewReportModal) {
+                console.error("Missing DOM elements for view report modal.");
+                alert("An internal error occurred. Please refresh the page.");
+                return;
+            }
+
             if (reportToView) {
-                const modalTitle = document.getElementById('view-report-title');
-                const modalBody = document.getElementById('view-report-body');
-                
                 const staff = staffAccounts.find(s => s.email === reportToView.email);
                 const staffDisplayName = staff ? staff.email : reportToView.email + ' (Account Deleted)';
                 const reportDateFormatted = new Date(reportToView.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -1570,27 +1761,38 @@
                     ${reportToView.commission ? `<p><strong>Commission Received:</strong><br>${reportToView.commission}</p>` : ''}
                     ${reportToView.accounts ? `<p><strong>Accounts:</strong><br>${reportToView.accounts}</p>` : ''}
                 `;
-                document.getElementById('view-report-modal').style.display = 'flex';
+                viewReportModal.style.display = 'flex';
+            } else {
+                console.warn(`Report with ID ${reportId} not found for viewing.`);
             }
         }
 
         function hideViewReportModal() {
-            document.getElementById('view-report-modal').style.display = 'none';
+            const modal = document.getElementById('view-report-modal');
+            if (modal) modal.style.display = 'none';
             reportToView = null;
         }
 
         function deleteReportConfirm(reportId) {
+            console.log(`Confirming deletion for report ID: ${reportId}`);
             reportToDeleteId = reportId;
-            document.getElementById('delete-report-confirm-modal').style.display = 'flex';
+            const modal = document.getElementById('delete-report-confirm-modal');
+            if (modal) modal.style.display = 'flex';
+            else console.warn("Delete report confirm modal not found.");
         }
 
         function hideDeleteReportConfirmModal() {
-            document.getElementById('delete-report-confirm-modal').style.display = 'none';
+            const modal = document.getElementById('delete-report-confirm-modal');
+            if (modal) modal.style.display = 'none';
             reportToDeleteId = null;
         }
 
         async function deleteReport() {
-            if (reportToDeleteId === null) return;
+            console.log(`Attempting to delete report ID: ${reportToDeleteId}`);
+            if (reportToDeleteId === null) {
+                console.error("No report selected for deletion.");
+                return;
+            }
 
             await loadAllData(); // Fetch latest reports before deletion
 
@@ -1607,7 +1809,7 @@
                     loadStaffReports(currentUser.email);
                 }
             } else {
-                alert('Failed to delete report. Please try again.');
+                alert('Failed to delete report. Please try again. Check console for API errors.');
                 dailyReports = originalDailyReports; // Revert
             }
             reportToDeleteId = null;
