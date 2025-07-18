@@ -2,50 +2,106 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Staff Report</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shree Hari Agencies - Staff Report</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Staff Report</h1>
-  <div id="report">Loading data...</div>
+  <!-- EXISTING UI AND STYLING FROM TXT FILE HERE -->
+
+  <!-- Assume all forms and elements like #staffName, #marketing-content, etc. exist -->
 
   <script>
     const BIN_ID = "687a90b474f7b01b5c73b07f";
     const MASTER_KEY = "$2a$10$vlNz95xI2evMW5E0BuhuoOF/yLfLgu/ZAN0c.ats6IvyeJKseTMgK";
+    const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-    function loadReport() {
-      $.ajax({
-        url: `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`,
-        type: "GET",
-        dataType: "json",
-        beforeSend: function(xhr) {
-          xhr.setRequestHeader("Content-Type", "application/json");
-          xhr.setRequestHeader("X-Master-Key", MASTER_KEY);
-        },
-        success: function(response) {
-          const data = response.record;
-          $('#report').html(renderReport(data));
-        },
-        error: function(xhr, status, err) {
-          console.error("Error loading JSONBin:", status, err, xhr.responseText);
-          $('#report').text("Failed to load report. See console for details.");
-        }
-      });
-    }
+    // Submit report to JSONBin
+    async function submitReport() {
+      const name = document.getElementById("staff-email").value || "Anonymous";
+      const marketing = document.getElementById("marketing-content").value;
+      const collection = document.getElementById("collection-content").value;
+      const commission = document.getElementById("commission-content").value;
+      const accounts = document.getElementById("accounts-content").value;
 
-    function renderReport(data) {
-      if (!data || !Array.isArray(data.staff)) {
-        return "<p>No staff data found.</p>";
+      if (!marketing && !collection && !commission && !accounts) {
+        alert("Please fill in at least one section before submitting.");
+        return;
       }
-      let html = "<ul>";
-      data.staff.forEach(st => {
-        html += `<li>${st.name} — ${st.position}</li>`;
-      });
-      html += "</ul>";
-      return html;
+
+      const newReport = {
+        date: new Date().toLocaleString("en-IN"),
+        name,
+        marketing,
+        collection,
+        commission,
+        accounts
+      };
+
+      try {
+        const getRes = await fetch(`${BIN_URL}/latest`, {
+          headers: { "X-Master-Key": MASTER_KEY }
+        });
+        const existing = await getRes.json();
+        const data = existing.record || [];
+
+        data.push(newReport);
+
+        const putRes = await fetch(BIN_URL, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": MASTER_KEY
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (putRes.ok) {
+          alert("Report submitted successfully!");
+        } else {
+          alert("Failed to submit report. Try again.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Error occurred during submission.");
+      }
     }
 
-    $(document).ready(loadReport);
+    // Load all reports (Owner dashboard)
+    async function loadAllReports() {
+      try {
+        const res = await fetch(`${BIN_URL}/latest`, {
+          headers: { "X-Master-Key": MASTER_KEY }
+        });
+        const data = await res.json();
+        const reports = data.record || [];
+        displayReports(reports);
+      } catch (err) {
+        console.error("Error loading reports:", err);
+        alert("Unable to load reports.");
+      }
+    }
+
+    // Display reports in a container
+    function displayReports(reports) {
+      const container = document.getElementById("owner-report-list");
+      container.innerHTML = "";
+
+      reports.reverse().forEach(report => {
+        const div = document.createElement("div");
+        div.className = "report-item";
+        div.innerHTML = `
+          <div class="report-date">${report.date}</div>
+          <div class="report-content"><strong>${report.name}</strong><br>
+            <b>Marketing:</b> ${report.marketing}<br>
+            <b>Collection:</b> ${report.collection}<br>
+            <b>Commission:</b> ${report.commission}<br>
+            <b>Accounts:</b> ${report.accounts}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
   </script>
 </body>
 </html>
